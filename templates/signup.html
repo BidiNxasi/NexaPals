@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up{% endblock %}
+
+{% block content %}
+<div class="hero" style="padding: 2rem;">
+    <div class="hero-text" style="text-align: center; margin: 0 auto;">
+        <h1>📝 <span>Create Account</span></h1>
+        <p>Join Nexa Pals and start your coding adventure</p>
+    </div>
+</div>
+
+<div style="max-width: 450px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 40px; box-shadow: 0 15px 0 #9B7EDE; border: 3px solid #FFB347;">
+    <form method="POST">
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1e5f4b;">
+                <i class="fas fa-user"></i> Username
+            </label>
+            <input type="text" name="username" placeholder="Choose a username" required
+                   style="width: 100%; padding: 0.8rem; border: 2px solid #FFB347; border-radius: 50px; font-family: inherit;">
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1e5f4b;">
+                <i class="fas fa-envelope"></i> Email Address
+            </label>
+            <input type="email" name="email" placeholder="your@email.com" required
+                   style="width: 100%; padding: 0.8rem; border: 2px solid #FFB347; border-radius: 50px; font-family: inherit;">
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1e5f4b;">
+                <i class="fas fa-lock"></i> Password
+            </label>
+            <input type="password" name="password" placeholder="Create a password" required
+                   style="width: 100%; padding: 0.8rem; border: 2px solid #FFB347; border-radius: 50px; font-family: inherit;">
+            <p style="font-size: 0.7rem; margin-top: 0.3rem; color: #6c757d;">At least 4 characters</p>
+        </div>
+        
+        <button type="submit" class="big-btn" style="width: 100%; font-size: 1.2rem; margin-top: 0.5rem;">
+            <i class="fas fa-user-plus"></i> Sign Up
+        </button>
+    </form>
+    
+    <div style="text-align: center; margin-top: 1.5rem;">
+        <p>Already have an account? <a href="{{ url_for('login') }}" style="color: #FFB347; font-weight: 600;">Login here</a></p>
+    </div>
+</div>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div style="max-width: 450px; margin: 1rem auto; background: #FFE6B0; padding: 0.8rem; border-radius: 30px; text-align: center; border-left: 5px solid #FFB347;">
+            {% for message in messages %}
+                <p style="color: #1e2a3e;">{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+{% endblock %}

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Nexa Pals · {% block title %}Coding for Kids 10+{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo-area">
+        <div class="logo-placeholder">
+            <i class="fas fa-laptop-code"></i>
+        </div>
+        <div class="logo-text">Nexa <span>Pals</span></div>
+    </div>
+    <div class="nav-links">
+        <a href="{{ url_for('learn') }}">learn</a>
+        <a href="{{ url_for('play') }}">play</a>
+        <a href="{{ url_for('create') }}">create</a>
+        <a href="{{ url_for('buddies') }}">pals</a>
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('logout') }}" class="btn-try"><i class="fas fa-sign-out-alt"></i> logout</a>
+            {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('admin') }}" class="btn-try" style="background:#FFB347!important">admin</a>
+            {% endif %}
+        {% else %}
+            <a href="{{ url_for('login') }}" class="btn-try"><i class="fas fa-sign-in-alt"></i> login</a>
+            <a href="{{ url_for('signup') }}" class="btn-try" style="background:#5D9BEC!important">sign up</a>
+        {% endif %}
+    </div>
+</nav>
+
+{% block content %}{% endblock %}
+
+<footer class="footer">
+    <div class="social-icons">
+        <i class="fab fa-tiktok"></i><i class="fab fa-youtube"></i><i class="fab fa-instagram"></i><i class="fab fa-discord"></i>
+    </div>
+    <p>© 2026 Nexa Pals · made with 💛 for young coders</p>
+    <p><i class="fas fa-heart" style="color: #FFB347;"></i> 10+ fun guaranteed!</p>
+</footer>
+
+<div class="message-popup" id="messagePopup"></div>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

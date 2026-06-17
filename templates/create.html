@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Create{% endblock %}
+
+{% block content %}
+<div class="hero" style="padding: 2rem;">
+    <h1>✨ Starter Templates</h1>
+    <p>Choose a project and start coding – the editor will be pre-filled for you!</p>
+</div>
+
+<div class="projects" style="background: linear-gradient(135deg, #FFE6B0, #E0D0FF);">
+    <div class="project-grid" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem;">
+        {% for template in templates %}
+        <div class="project-card" data-template-id="{{ template.id }}" style="cursor: pointer; width: 240px; text-align: center; background: white; border-radius: 40px; padding: 1.5rem; border: 5px solid #FFB347; box-shadow: 0 12px 0 #c17d2e; transition: 0.2s;">
+            <i class="fas {{ template.icon }}" style="font-size: 3rem; background: #FFB347; padding: 1rem; border-radius: 50%; color: white;"></i>
+            <h4 style="font-size: 1.5rem; margin: 1rem 0 0.5rem;">{{ template.name }}</h4>
+            <p>{{ template.description }}</p>
+            <span style="display: inline-block; margin-top: 0.8rem; background: #1e5f4b; color: white; padding: 0.2rem 1rem; border-radius: 30px; font-size: 0.8rem;">{{ template.difficulty }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    // Store template data in sessionStorage and redirect to play page
+    document.querySelectorAll('.project-card').forEach(card => {
+        card.addEventListener('click', async function() {
+            const templateId = this.getAttribute('data-template-id');
+            try {
+                const response = await fetch(`/api/load_template/${templateId}`);
+                const data = await response.json();
+                if (data.success) {
+                    sessionStorage.setItem('templateHtml', data.html_code);
+                    sessionStorage.setItem('templateCss', data.css_code);
+                    sessionStorage.setItem('templateJs', data.js_code);
+                    sessionStorage.setItem('templateName', data.name);
+                    window.location.href = "{{ url_for('play') }}";
+                } else {
+                    alert('Could not load template');
+                }
+            } catch (error) {
+                alert('Error loading template');
+            }
+        });
+    });
+
+</script>
+{% endblock %}
