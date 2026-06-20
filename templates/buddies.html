@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Our Pals{% endblock %}
+
+{% block content %}
+<div class="hero" style="background: linear-gradient(135deg, #E0D0FF, #FFF3E0);">
+    <div class="hero-text">
+        <h1>🧑‍💻 <span>Meet Your Pals</span></h1>
+        <p>Your coding mentors, friends, and guides – here to help you every step of the way.</p>
+    </div>
+    <div class="hero-avatar" style="background: #FFB347;">
+        <i class="fas fa-users"></i>
+    </div>
+</div>
+
+<div class="squad" style="background: white;">
+    <h2 class="section-title"><span>🌟 The Pal Squad 🌟</span></h2>
+    <div class="squad-grid">
+        <div class="buddy-card" style="background: linear-gradient(145deg, #5D9BEC, #3A6EA5);">
+            <i class="fas fa-robot"></i>
+            <h3>Karabo</h3>
+            <p>Python & Robotics pro</p>
+            <p style="font-size: 0.8rem; margin-top: 0.5rem;">"I love helping new coders build their first robot!"</p>
+        </div>
+        <div class="buddy-card" style="background: linear-gradient(145deg, #FFB347, #C17D2E);">
+            <i class="fas fa-gamepad"></i>
+            <h3>Thabiso</h3>
+            <p>Game Design master</p>
+            <p style="font-size: 0.8rem; margin-top: 0.5rem;">"Let's turn your game ideas into reality!"</p>
+        </div>
+        <div class="buddy-card" style="background: linear-gradient(145deg, #9B7EDE, #6B4F9E);">
+            <i class="fas fa-paint-brush"></i>
+            <h3>Relebohile</h3>
+            <p>Art & Animation wizard</p>
+            <p style="font-size: 0.8rem; margin-top: 0.5rem;">"Code can be beautiful – let me show you how!"</p>
+        </div>
+    </div>
+</div>
+
+<div class="projects" style="background: #f0f5ff;">
+    <h2 class="section-title"><span>💬 What Our Pals Say</span></h2>
+    <div style="max-width: 800px; margin: 0 auto;">
+        {% for t in testimonials %}
+        <div class="testimonial" style="margin: 1.5rem auto; background: white; border-left: 8px solid #FFB347;">
+            <i class="fas fa-quote-left" style="color: #FFB347; font-size: 1.5rem; margin-right: 0.5rem;"></i>
+            <span style="font-size: 1.2rem;">{{ t.emoji }} {{ t.text }}</span>
+            <br>--- <strong>{{ t.author }}</strong>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="cta" style="background: #1e5f4b;">
+    <h2>🤝 Become a Pal</h2>
+    <p style="font-size: 1.2rem; margin: 1rem 0;">Join our community of young coders and mentors</p>
+    <button class="big-btn" onclick="window.location.href='{{ url_for('signup') }}'" style="background: #FFB347; color: #1e2a3e;">Sign Up Now →</button>
+</div>
+
+<script>
+    // Interactive buddy cards
+    document.querySelectorAll('.buddy-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const name = this.querySelector('h3')?.textContent || 'Pal';
+            alert(`💬 ${name} says: "Ask me anything about coding! I'm here to help."`);
+        });
+    });
+</script>
+{% endblock %}

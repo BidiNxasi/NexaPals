@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="hero" style="padding: 2rem; background: linear-gradient(135deg, #1e5f4b, #0e3a2e); color: white;">
+    <div class="hero-text" style="text-align: center;">
+        <h1 style="color: white;">🔧 <span style="background: #FFB347;">Admin Dashboard</span></h1>
+        <p style="color: #f0f0f0;">Manage users, projects, and platform content</p>
+    </div>
+</div>
+
+<div style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem;">
+    <!-- Stats Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div style="background: white; border-radius: 24px; padding: 1.2rem; text-align: center; border-left: 6px solid #FFB347; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <h3 style="font-size: 2rem; color: #1e5f4b;">{{ users|length }}</h3>
+            <p style="color: #4a627a; font-weight: 500;">Registered Users</p>
+        </div>
+        <div style="background: white; border-radius: 24px; padding: 1.2rem; text-align: center; border-left: 6px solid #FFB347; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <h3 style="font-size: 2rem; color: #1e5f4b;">{{ projects|length }}</h3>
+            <p style="color: #4a627a; font-weight: 500;">Saved Projects</p>
+        </div>
+        <div style="background: white; border-radius: 24px; padding: 1.2rem; text-align: center; border-left: 6px solid #FFB347; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <h3 style="font-size: 2rem; color: #1e5f4b;">{{ templates|length }}</h3>
+            <p style="color: #4a627a; font-weight: 500;">Starter Templates</p>
+        </div>
+    </div>
+    
+    <!-- Users Table -->
+    <div style="background: white; border-radius: 32px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <h2 style="color: #1e5f4b; margin-bottom: 1rem;"><i class="fas fa-users"></i> All Users</h2>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #FFB347; color: white;">
+                        <th style="padding: 0.8rem; text-align: left;">ID</th>
+                        <th style="padding: 0.8rem; text-align: left;">Username</th>
+                        <th style="padding: 0.8rem; text-align: left;">Email</th>
+                        <th style="padding: 0.8rem; text-align: left;">Role</th>
+                        <th style="padding: 0.8rem; text-align: left;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr style="border-bottom: 1px solid #e9ecef;" id="user-row-{{ user.id }}">
+                        <td style="padding: 0.8rem;">{{ user.id }}</td>
+                        <td style="padding: 0.8rem;">{{ user.username }}</td>
+                        <td style="padding: 0.8rem;">{{ user.email }}</td>
+                        <td style="padding: 0.8rem;">
+                            <span style="background: {% if user.role == 'admin' %}#FFB347{% else %}#9B7EDE{% endif %}; color: white; padding: 0.2rem 0.8rem; border-radius: 30px;">
+                                {{ user.role }}
+                            </span>
+                        </td>
+                        <td style="padding: 0.8rem;">
+                            {% if user.id != current_user.id %}
+                            <button onclick="adminDeleteUser({{ user.id }})" style="background:#e25c5c;color:white;border:none;padding:0.4rem 0.9rem;border-radius:20px;cursor:pointer;font-size:0.8rem;">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                            {% else %}
+                            <span style="font-size: 0.8rem; color: #6c757d;">(you)</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Projects Table -->
+    <div style="background: white; border-radius: 32px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <h2 style="color: #1e5f4b; margin-bottom: 1rem;"><i class="fas fa-code"></i> Saved Projects</h2>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #FFB347; color: white;">
+                        <th style="padding: 0.8rem; text-align: left;">ID</th>
+                        <th style="padding: 0.8rem; text-align: left;">Title</th>
+                        <th style="padding: 0.8rem; text-align: left;">User ID</th>
+                        <th style="padding: 0.8rem; text-align: left;">Last Updated</th>
+                        <th style="padding: 0.8rem; text-align: left;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in projects %}
+                    <tr style="border-bottom: 1px solid #e9ecef;" id="project-row-{{ project.id }}">
+                        <td style="padding: 0.8rem;">{{ project.id }}</td>
+                        <td style="padding: 0.8rem;">{{ project.title }}</td>
+                        <td style="padding: 0.8rem;">{{ project.user_id }}</td>
+                        <td style="padding: 0.8rem;">{{ project.updated_at.strftime('%Y-%m-%d') if project.updated_at else 'N/A' }}</td>
+                        <td style="padding: 0.8rem;">
+                            <button onclick="adminDeleteProject({{ project.id }})" style="background:#e25c5c;color:white;border:none;padding:0.4rem 0.9rem;border-radius:20px;cursor:pointer;font-size:0.8rem;">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div style="background: #f0f5ff; border-radius: 32px; padding: 1.5rem; text-align: center;">
+        <h3><i class="fas fa-cog"></i> Quick Actions</h3>
+        <p style="margin: 1rem 0;">Use the Delete buttons in the tables above to remove users or projects. Deleting a user also removes their saved projects.</p>
+    </div>
+</div>
+
+<script>
+async function adminDeleteUser(userId) {
+    if (!confirm('Delete this user? Their saved projects will also be deleted. This can\'t be undone!')) return;
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    try {
+        const response = await fetch(`/api/admin/delete_user/${userId}`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': meta ? meta.getAttribute('content') : '' }
+        });
+        const data = await response.json();
+        if (data.success) {
+            document.getElementById(`user-row-${userId}`)?.remove();
+        } else {
+            alert('❌ ' + (data.message || 'Error deleting user'));
+        }
+    } catch (e) {
+        alert('❌ Network error. Please try again.');
+    }
+}
+
+async function adminDeleteProject(projectId) {
+    if (!confirm('Delete this project? This can\'t be undone!')) return;
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    try {
+        const response = await fetch(`/api/admin/delete_project/${projectId}`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': meta ? meta.getAttribute('content') : '' }
+        });
+        const data = await response.json();
+        if (data.success) {
+            document.getElementById(`project-row-${projectId}`)?.remove();
+        } else {
+            alert('❌ ' + (data.message || 'Error deleting project'));
+        }
+    } catch (e) {
+        alert('❌ Network error. Please try again.');
+    }
+}
+</script>
+{% endblock %}

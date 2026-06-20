@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}My Projects{% endblock %}
+
+{% block content %}
+<div class="hero" style="padding: 2rem;">
+    <div class="hero-text">
+        <h1>📁 <span>My Projects</span></h1>
+        <p>Everything you've built so far, all in one place.</p>
+    </div>
+    <a href="{{ url_for('play') }}" class="hero-avatar" style="text-decoration: none; background: #9B7EDE;">
+        <i class="fas fa-plus"></i>
+    </a>
+</div>
+
+<div class="projects" style="padding: 2rem;">
+    {% if user_projects %}
+    <div class="project-grid" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem;">
+        {% for proj in user_projects %}
+        <div class="project-card" style="width: 240px; text-align: center; background: white; border-radius: 40px; padding: 1.5rem; border: 5px solid #FFB347; box-shadow: 0 12px 0 #c17d2e;">
+            <i class="fas fa-code" style="font-size: 2.5rem; background: #5D9BEC; padding: 1rem; border-radius: 50%; color: white;"></i>
+            <h4 style="font-size: 1.3rem; margin: 1rem 0 0.3rem; word-break: break-word;">{{ proj.title }}</h4>
+            <p style="font-size: 0.8rem; color: #6c757d;">
+                Updated {{ proj.updated_at.strftime('%d %b %Y') if proj.updated_at else 'recently' }}
+            </p>
+            <div style="display: flex; gap: 0.5rem; justify-content: center; margin-top: 1rem; flex-wrap: wrap;">
+                <a href="{{ url_for('play_project', project_id=proj.id) }}" class="big-btn" style="text-decoration: none; font-size: 0.85rem; padding: 0.5rem 1rem; background: #5D9BEC;">
+                    <i class="fas fa-pen"></i> Open
+                </a>
+                <button class="big-btn" style="font-size: 0.85rem; padding: 0.5rem 1rem; background: #e25c5c;" onclick="deleteProjectFromGallery({{ proj.id }}, this)">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 3rem 1rem;">
+        <i class="fas fa-folder-open" style="font-size: 3rem; color: #FFB347;"></i>
+        <h3 style="margin-top: 1rem;">No projects yet!</h3>
+        <p>Head to the playground and build your first project.</p>
+        <a href="{{ url_for('play') }}" class="big-btn" style="display: inline-block; margin-top: 1rem; text-decoration: none;">
+            <i class="fas fa-rocket"></i> Start Coding
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+async function deleteProjectFromGallery(projectId, btn) {
+    if (!confirm('Delete this project? This can\'t be undone!')) return;
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    try {
+        const response = await fetch(`/api/delete_project/${projectId}`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': meta ? meta.getAttribute('content') : '' }
+        });
+        const data = await response.json();
+        if (data.success) {
+            btn.closest('.project-card').remove();
+        } else {
+            alert('❌ ' + (data.message || 'Error deleting project'));
+        }
+    } catch (e) {
+        alert('❌ Network error. Please try again.');
+    }
+}
+</script>
+{% endblock %}

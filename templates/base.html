@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Nexa Pals · {% block title %}Coding for Kids 10+{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/NexaLogo.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo-area">
+        <a href="{{ url_for('index') }}" class="logo-placeholder" style="display:flex;align-items:center;justify-content:center;text-decoration:none;">
+            <img src="{{ url_for('static', filename='images/NexaLogo.png') }}" alt="Nexa Pals logo" style="width:100%;height:100%;object-fit:contain;border-radius:50%;">
+        </a>
+        <div class="logo-text">Nexa <span>Pals</span></div>
+    </div>
+    <div class="nav-links">
+        <a href="{{ url_for('learn') }}">learn</a>
+        <a href="{{ url_for('play') }}">play</a>
+        <a href="{{ url_for('create') }}">create</a>
+        <a href="{{ url_for('buddies') }}">pals</a>
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('my_projects') }}">my projects</a>
+            <a href="{{ url_for('logout') }}" class="btn-try"><i class="fas fa-sign-out-alt"></i> logout</a>
+            {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('admin') }}" class="btn-try" style="background:#FFB347!important">admin</a>
+            {% endif %}
+        {% else %}
+            <a href="{{ url_for('login') }}" class="btn-try"><i class="fas fa-sign-in-alt"></i> login</a>
+            <a href="{{ url_for('signup') }}" class="btn-try" style="background:#5D9BEC!important">sign up</a>
+        {% endif %}
+    </div>
+</nav>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="flash-messages" style="max-width: 600px; margin: 1rem auto 0; padding: 0 1rem;">
+            {% for message in messages %}
+                <div style="background: #FFE6B0; padding: 0.8rem 1.2rem; border-radius: 30px; text-align: center; border-left: 5px solid #FFB347; margin-bottom: 0.5rem; color: #1e2a3e; font-weight: 500;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+
+<footer class="footer">
+    <div class="social-icons">
+        <i class="fab fa-tiktok"></i><i class="fab fa-youtube"></i><i class="fab fa-instagram"></i><i class="fab fa-discord"></i>
+    </div>
+    <p>© 2026 Nexa Pals · made with 💛 for young coders</p>
+    <p><i class="fas fa-heart" style="color: #FFB347;"></i> 10+ fun guaranteed!</p>
+</footer>
+
+<div class="message-popup" id="messagePopup"></div>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

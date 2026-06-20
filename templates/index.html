@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <div class="hero-text">
+        <h1>Hey! <span>Nexa Pals</span> is here! 👋</h1>
+        <p><i class="fas fa-rocket" style="color: #FFB347;"></i> Make games, tell stories, code with friends!</p>
+        <div class="project-counter" id="projectCounter">
+            <i class="fa-regular fa-star"></i> <span id="countNumber">150</span>+ projects
+        </div>
+    </div>
+    <div class="hero-avatar" id="buddyAvatar">
+        <i class="fas fa-smile-wink"></i>
+    </div>
+</div>
+
+<div class="features">
+    <h2 class="section-title"><span>⚡ super powers ⚡</span></h2>
+    <div class="feature-grid">
+        <div class="feature-card"><i class="fas fa-puzzle-piece"></i><h3>blocks</h3><p>snap & create</p></div>
+        <div class="feature-card"><i class="fas fa-gamepad"></i><h3>games</h3><p>build & play</p></div>
+        <div class="feature-card"><i class="fas fa-paint-brush"></i><h3>art</h3><p>draw & code</p></div>
+        <div class="feature-card"><i class="fas fa-medal"></i><h3>badges</h3><p>earn rewards</p></div>
+    </div>
+</div>
+
+<div class="projects">
+    <h2 class="section-title"><span>✨ awesome projects ✨</span></h2>
+    <div class="project-grid" id="projectGrid">
+        {% for template in templates %}
+        <div class="project-card" data-template-id="{{ template.id }}">
+            <i class="fas {{ template.icon }}"></i>
+            <h4>{{ template.name }}</h4>
+            <p>{{ template.description }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="project-counter" id="clickCounter"><i class="fas fa-mouse-pointer"></i> click me!</div>
+</div>
+
+<div class="squad">
+    <h2 class="section-title"><span>🌟 pal squad 🌟</span></h2>
+    <div class="squad-grid">
+        <div class="buddy-card"><i class="fas fa-robot"></i><h3>Karabo</h3><p>python pro</p></div>
+        <div class="buddy-card"><i class="fas fa-heart"></i><h3>Thabiso</h3><p>game master</p></div>
+        <div class="buddy-card"><i class="fas fa-paint-brush"></i><h3>Relebohile</h3><p>art wizard</p></div>
+    </div>
+    <div class="testimonial" id="testimonialBox">
+        <i class="fas fa-quote-left" style="color: #9B7EDE;"></i>
+        <span id="testimonialText">I made my first game in less than 2 hours!</span><br>--- <span id="testimonialAuthor">Mia, 10</span>
+    </div>
+</div>
+
+<div class="cta">
+    <h2><i>start coding today</i> 🚀</h2>
+    <button class="big-btn" id="startBtn"><i class="fa-regular fa-hand-peace"></i> become a pal</button>
+    <div class="free-badge"><i class="fas fa-gift" style="color: #9B7EDE;"></i> first month for free</div>
+</div>
+{% endblock %}

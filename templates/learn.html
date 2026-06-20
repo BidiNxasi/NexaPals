@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Learn to Code{% endblock %}
+
+{% block content %}
+<div class="hero" style="background: linear-gradient(135deg, #E6F0FF, #FFF3E0);">
+    <div class="hero-text">
+        <h1>📚 <span>Learn to Code</span></h1>
+        <p>Step-by-step lessons designed for young coders. Start from zero, become a hero!</p>
+    </div>
+    <div class="hero-avatar" style="background: #5D9BEC;">
+        <i class="fas fa-graduation-cap"></i>
+    </div>
+</div>
+
+<div class="features" style="background: white;">
+    <h2 class="section-title"><span>📖 Beginner Path</span></h2>
+    <div class="feature-grid">
+        <div class="feature-card" style="background: linear-gradient(145deg, #5D9BEC, #3A6EA5);">
+            <i class="fas fa-code"></i>
+            <h3>HTML Basics</h3>
+            <p>Learn tags, attributes, and structure your first webpage</p>
+            <div style="margin-top: 1rem; font-size: 0.8rem;">⭐ 4 lessons</div>
+        </div>
+        <div class="feature-card" style="background: linear-gradient(145deg, #FFB347, #C17D2E);">
+            <i class="fas fa-paint-brush"></i>
+            <h3>CSS Styling</h3>
+            <p>Colors, fonts, layouts – make your pages beautiful</p>
+            <div style="margin-top: 1rem; font-size: 0.8rem;">⭐ 5 lessons</div>
+        </div>
+        <div class="feature-card" style="background: linear-gradient(145deg, #9B7EDE, #6B4F9E);">
+            <i class="fas fa-gamepad"></i>
+            <h3>JavaScript Basics</h3>
+            <p>Variables, functions, events – make things interactive</p>
+            <div style="margin-top: 1rem; font-size: 0.8rem;">⭐ 6 lessons</div>
+        </div>
+    </div>
+</div>
+
+<div class="projects" style="background: #f0f5ff;">
+    <h2 class="section-title"><span>🚀 Intermediate Path</span></h2>
+    <div class="feature-grid">
+        <div class="feature-card" style="background: linear-gradient(145deg, #1e5f4b, #0e3a2e);">
+            <i class="fas fa-chart-line"></i>
+            <h3>Loops & Arrays</h3>
+            <p>Control flow, repetition, and data storage</p>
+            <div style="margin-top: 1rem; font-size: 0.8rem;">⭐ 4 lessons</div>
+        </div>
+        <div class="feature-card" style="background: linear-gradient(145deg, #FF8B94, #c06b73);">
+            <i class="fas fa-window-maximize"></i>
+            <h3>DOM Manipulation</h3>
+            <p>Change web pages dynamically with JavaScript</p>
+            <div style="margin-top: 1rem; font-size: 0.8rem;">⭐ 5 lessons</div>
+        </div>
+        <div class="feature-card" style="background: linear-gradient(145deg, #6c5ce7, #4a3f9e);">
+            <i class="fas fa-gamepad"></i>
+            <h3>Build Your First Game</h3>
+            <p>Create a clicker game from scratch</p>
+            <div style="margin-top: 1rem; font-size: 0.8rem;">⭐ Project-based</div>
+        </div>
+    </div>
+</div>
+
+<div class="cta" style="background: #FFB347; border: none;">
+    <h2 style="color: #1e2a3e;">🎯 Ready to start?</h2>
+    <button class="big-btn" onclick="window.location.href='{{ url_for('play') }}'" style="background: white; color: #1e5f4b;">Go to Playground →</button>
+</div>
+
+<script>
+    // Mark lessons as completed (local storage for demo)
+    document.querySelectorAll('.feature-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const title = this.querySelector('h3')?.textContent || 'lesson';
+            alert(`📘 "${title}" – Lesson content will be available soon! Complete the interactive exercises on the Play page.`);
+        });
+    });
+</script>
+{% endblock %}
