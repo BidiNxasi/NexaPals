@@ -1,78 +1,76 @@
 {% extends "base.html" %}
-
 {% block title %}Learn to Code{% endblock %}
 
 {% block content %}
 <div class="hero" style="background: linear-gradient(135deg, #E6F0FF, #FFF3E0);">
-    <div class="hero-text">
-        <h1>📚 <span>Learn to Code</span></h1>
-        <p>Step-by-step lessons designed for young coders. Start from zero, become a hero!</p>
-    </div>
-    <div class="hero-avatar" style="background: #5D9BEC;">
-        <i class="fas fa-graduation-cap"></i>
-    </div>
+  <div class="hero-text">
+    <h1>📚 <span>Learn to Code</span></h1>
+    <p>Step-by-step lessons, quizzes, and XP rewards. Start from zero, become a hero!</p>
+    {% if current_user.is_authenticated %}
+      <div style="margin-top:1rem; display:flex; gap:1rem; flex-wrap:wrap;">
+        <div style="background:white; border-radius:30px; padding:0.5rem 1.2rem; border:3px solid #FFB347; font-weight:700; color:#1e5f4b;">
+          ⚡ {{ current_user.xp }} XP
+        </div>
+        <div style="background:white; border-radius:30px; padding:0.5rem 1.2rem; border:3px solid #9B7EDE; font-weight:700; color:#6B4F9E;">
+          ✅ {{ completed }}/{{ total_lessons }} completed
+        </div>
+      </div>
+    {% endif %}
+  </div>
+  <div class="hero-avatar" style="background:#5D9BEC;"><i class="fas fa-graduation-cap"></i></div>
 </div>
 
-<div class="features" style="background: white;">
-    <h2 class="section-title"><span>📖 Beginner Path</span></h2>
-    <div class="feature-grid">
-        <div class="feature-card" style="background: linear-gradient(145deg, #5D9BEC, #3A6EA5);">
-            <i class="fas fa-code"></i>
-            <h3>HTML Basics</h3>
-            <p>Learn tags, attributes, and structure your first webpage</p>
-            <div style="margin-top: 1rem; font-size: 0.8rem;">⭐ 4 lessons</div>
-        </div>
-        <div class="feature-card" style="background: linear-gradient(145deg, #FFB347, #C17D2E);">
-            <i class="fas fa-paint-brush"></i>
-            <h3>CSS Styling</h3>
-            <p>Colors, fonts, layouts – make your pages beautiful</p>
-            <div style="margin-top: 1rem; font-size: 0.8rem;">⭐ 5 lessons</div>
-        </div>
-        <div class="feature-card" style="background: linear-gradient(145deg, #9B7EDE, #6B4F9E);">
-            <i class="fas fa-gamepad"></i>
-            <h3>JavaScript Basics</h3>
-            <p>Variables, functions, events – make things interactive</p>
-            <div style="margin-top: 1rem; font-size: 0.8rem;">⭐ 6 lessons</div>
-        </div>
-    </div>
-</div>
+{% set track_meta = {
+  'html': {'label':'HTML', 'emoji':'🏗️', 'color':'#5D9BEC', 'shadow':'#3A6EA5', 'desc':'Build the structure of every webpage'},
+  'css':  {'label':'CSS',  'emoji':'🎨', 'color':'#FFB347', 'shadow':'#C17D2E', 'desc':'Make your pages beautiful with style'},
+  'javascript': {'label':'JavaScript', 'emoji':'⚡', 'color':'#9B7EDE', 'shadow':'#6B4F9E', 'desc':'Bring your pages to life with code'}
+} %}
 
-<div class="projects" style="background: #f0f5ff;">
-    <h2 class="section-title"><span>🚀 Intermediate Path</span></h2>
-    <div class="feature-grid">
-        <div class="feature-card" style="background: linear-gradient(145deg, #1e5f4b, #0e3a2e);">
-            <i class="fas fa-chart-line"></i>
-            <h3>Loops & Arrays</h3>
-            <p>Control flow, repetition, and data storage</p>
-            <div style="margin-top: 1rem; font-size: 0.8rem;">⭐ 4 lessons</div>
-        </div>
-        <div class="feature-card" style="background: linear-gradient(145deg, #FF8B94, #c06b73);">
-            <i class="fas fa-window-maximize"></i>
-            <h3>DOM Manipulation</h3>
-            <p>Change web pages dynamically with JavaScript</p>
-            <div style="margin-top: 1rem; font-size: 0.8rem;">⭐ 5 lessons</div>
-        </div>
-        <div class="feature-card" style="background: linear-gradient(145deg, #6c5ce7, #4a3f9e);">
-            <i class="fas fa-gamepad"></i>
-            <h3>Build Your First Game</h3>
-            <p>Create a clicker game from scratch</p>
-            <div style="margin-top: 1rem; font-size: 0.8rem;">⭐ Project-based</div>
-        </div>
-    </div>
-</div>
+{% for track_key, lesson_pairs in tracks.items() %}
+{% set m = track_meta[track_key] %}
+<section style="padding:2.5rem 2rem; {% if loop.index % 2 == 0 %}background:#f0f5ff{% else %}background:white{% endif %};">
+  <h2 class="section-title">
+    <span>{{ m.emoji }} {{ m.label }} Track</span>
+    <small style="font-size:0.7rem; font-weight:500; color:#6c757d; display:block; margin-top:0.3rem;">{{ m.desc }}</small>
+  </h2>
 
-<div class="cta" style="background: #FFB347; border: none;">
-    <h2 style="color: #1e2a3e;">🎯 Ready to start?</h2>
-    <button class="big-btn" onclick="window.location.href='{{ url_for('play') }}'" style="background: white; color: #1e5f4b;">Go to Playground →</button>
-</div>
+  <div style="display:flex; flex-wrap:wrap; gap:1.2rem; justify-content:center; margin-top:1.5rem;">
+    {% for lesson_obj, prog in lesson_pairs %}
+    {% set done = prog and prog.completed %}
+    <a href="{% if current_user.is_authenticated %}{{ url_for('lesson', track=track_key, lesson_id=lesson_obj.id) }}{% else %}{{ url_for('login') }}{% endif %}"
+       style="text-decoration:none; width:220px;">
+      <div style="background:white; border-radius:28px; padding:1.4rem; border:4px solid {{ m.color }}; box-shadow:0 8px 0 {{ m.shadow }}; transition:0.2s; position:relative; height:100%; {% if done %}opacity:0.85{% endif %}"
+           onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+        {% if done %}
+          <div style="position:absolute; top:-10px; right:-10px; background:#1e5f4b; color:white; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; font-size:0.9rem;">✓</div>
+        {% endif %}
+        <div style="font-size:2rem; margin-bottom:0.5rem;">
+          {% if done %}✅{% else %}📖{% endif %}
+        </div>
+        <h4 style="margin:0 0 0.5rem; color:#1e3a5f; font-size:1rem;">{{ lesson_obj.title }}</h4>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.8rem;">
+          <span style="font-size:0.75rem; background:{{ m.color }}22; color:{{ m.color }}; padding:0.2rem 0.7rem; border-radius:20px; font-weight:700;">
+            Lesson {{ lesson_obj.order }}
+          </span>
+          <span style="font-size:0.75rem; color:#FFB347; font-weight:700;">⚡ {{ lesson_obj.xp_reward }} XP</span>
+        </div>
+        {% if prog and prog.score %}
+          <div style="margin-top:0.6rem; background:#e9ecef; border-radius:20px; height:6px;">
+            <div style="width:{{ prog.score }}%; background:#1e5f4b; border-radius:20px; height:6px;"></div>
+          </div>
+          <div style="font-size:0.72rem; color:#1e5f4b; margin-top:0.3rem; font-weight:600;">Quiz: {{ prog.score }}%</div>
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
 
-<script>
-    // Mark lessons as completed (local storage for demo)
-    document.querySelectorAll('.feature-card').forEach(card => {
-        card.addEventListener('click', function() {
-            const title = this.querySelector('h3')?.textContent || 'lesson';
-            alert(`📘 "${title}" – Lesson content will be available soon! Complete the interactive exercises on the Play page.`);
-        });
-    });
-</script>
+{% if not current_user.is_authenticated %}
+<div class="cta" style="background:#FFB347; border:none;">
+  <h2 style="color:#1e2a3e;">🔐 Log in to track your progress!</h2>
+  <a href="{{ url_for('login') }}" class="big-btn" style="background:white; color:#1e5f4b; text-decoration:none; display:inline-block;">Login / Sign Up →</a>
+</div>
+{% endif %}
 {% endblock %}

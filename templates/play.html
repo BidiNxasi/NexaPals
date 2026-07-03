@@ -1,77 +1,289 @@
 {% extends "base.html" %}
-
 {% block title %}Playground{% endblock %}
 
 {% block content %}
 <div class="hero" style="padding: 1rem 2rem;">
     <h1>🎮 Code Playground</h1>
-    <p>Write HTML, CSS, and JavaScript – see live results!</p>
+    <p>Write HTML, CSS, and JavaScript – see live results instantly!</p>
 </div>
 
-<div class="playground-container" style="display: flex; flex-wrap: wrap; gap: 1rem; padding: 2rem; background: #f0f5ff;">
-    <!-- Editor Panel -->
-    <div style="flex: 1; min-width: 300px;">
-        <h3>📝 HTML</h3>
-        <textarea id="htmlEditor" rows="8" style="width:100%; font-family: monospace; padding: 0.8rem; border-radius: 16px; border: 2px solid #FFB347;">{{ active_project.html_code if active_project else '<h1>Hello, Nexa Pals!</h1>\n<p>Change this code and see the magic.</p>\n<button id="myBtn">Click Me</button>' }}</textarea>
+<div style="display:flex; flex-wrap:wrap; gap:1rem; padding:1.5rem; background:#f0f5ff; align-items:flex-start;">
 
-        <h3 style="margin-top: 1rem;">🎨 CSS</h3>
-        <textarea id="cssEditor" rows="6" style="width:100%; font-family: monospace; padding: 0.8rem; border-radius: 16px; border: 2px solid #FFB347;">{{ active_project.css_code if active_project else 'h1 { color: #FFB347; font-family: sans-serif; }\nbutton { background: #9B7EDE; color: white; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; }\nbutton:hover { background: #7B5EC0; }' }}</textarea>
+    <!-- ── Left: editors ── -->
+    <div style="flex:1; min-width:300px;">
 
-        <h3 style="margin-top: 1rem;">⚡ JavaScript</h3>
-        <textarea id="jsEditor" rows="6" style="width:100%; font-family: monospace; padding: 0.8rem; border-radius: 16px; border: 2px solid #FFB347;">{{ active_project.js_code if active_project else "document.getElementById('myBtn')?.addEventListener('click', () => {\n    alert('You clicked the button! 🎉');\n});" }}</textarea>
-
-        <div style="margin: 1rem 0; display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: center;">
-            <button class="big-btn" style="font-size: 1rem; padding: 0.6rem 1.2rem;" onclick="runCode()">▶ Run</button>
-            <button class="big-btn" style="font-size: 1rem; padding: 0.6rem 1.2rem; background:#5D9BEC;" onclick="saveProject()">💾 Save</button>
-            <button class="big-btn" style="font-size: 1rem; padding: 0.6rem 1.2rem; background:#9B7EDE;" onclick="startNewProject()">✨ New</button>
-            <button class="big-btn" style="font-size: 1rem; padding: 0.6rem 1.2rem; background:#e25c5c;" onclick="deleteCurrentProject()">🗑️ Delete</button>
+        <!-- Tab bar -->
+        <div style="display:flex; gap:0.4rem; margin-bottom:0.5rem; flex-wrap:wrap;">
+            <button class="tab-btn active" onclick="switchTab('html')" id="tab-html" style="background:#FFB347; color:white; border:none; padding:0.4rem 1rem; border-radius:20px 20px 0 0; font-weight:700; cursor:pointer;">📝 HTML</button>
+            <button class="tab-btn" onclick="switchTab('css')" id="tab-css" style="background:#e9ecef; border:none; padding:0.4rem 1rem; border-radius:20px 20px 0 0; font-weight:700; cursor:pointer;">🎨 CSS</button>
+            <button class="tab-btn" onclick="switchTab('js')" id="tab-js" style="background:#e9ecef; border:none; padding:0.4rem 1rem; border-radius:20px 20px 0 0; font-weight:700; cursor:pointer;">⚡ JS</button>
         </div>
-        <div style="margin: 0 0 1rem; display: flex; gap: 0.8rem; flex-wrap: wrap;">
-            <select id="projectSelect" style="padding: 0.6rem; border-radius: 30px; border: 2px solid #FFB347;" onchange="loadProject()">
+
+        <div style="position:relative;">
+            <textarea id="htmlEditor" rows="16" style="width:100%; font-family:monospace; font-size:0.88rem; padding:0.8rem; border-radius:0 16px 16px 16px; border:2px solid #FFB347; resize:vertical; display:block; box-sizing:border-box;">{{ active_project.html_code if active_project else '<h1>Hello, Nexa Pals!</h1>\n<p>Change this code and see the magic.</p>\n<button id="myBtn">Click Me! 🎉</button>' }}</textarea>
+            <textarea id="cssEditor"  rows="16" style="width:100%; font-family:monospace; font-size:0.88rem; padding:0.8rem; border-radius:0 16px 16px 16px; border:2px solid #FFB347; resize:vertical; display:none; box-sizing:border-box;">{{ active_project.css_code if active_project else 'h1 { color: #FFB347; font-family: sans-serif; }\nbutton {\n  background: #9B7EDE; color: white;\n  border: none; padding: 10px 20px;\n  border-radius: 30px; cursor: pointer;\n}\nbutton:hover { background: #7B5EC0; }' }}</textarea>
+            <textarea id="jsEditor"   rows="16" style="width:100%; font-family:monospace; font-size:0.88rem; padding:0.8rem; border-radius:0 16px 16px 16px; border:2px solid #FFB347; resize:vertical; display:none; box-sizing:border-box;">{{ active_project.js_code if active_project else "document.getElementById('myBtn')?.addEventListener('click', () => {\n    alert('You clicked the button! 🎉');\n});" }}</textarea>
+
+            <!-- Explain selection button (appears on mouseup) -->
+            <button id="explainBtn" onclick="explainSelection()"
+                    style="display:none; position:absolute; background:#9B7EDE; color:white; border:none; border-radius:20px; padding:0.3rem 0.8rem; font-size:0.8rem; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:10;">
+                🤖 Explain this
+            </button>
+        </div>
+
+        <!-- Action bar -->
+        <div style="margin:0.8rem 0; display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
+            <button class="big-btn" style="font-size:0.9rem; padding:0.5rem 1rem;" onclick="runCode()">▶ Run</button>
+            <button class="big-btn" style="font-size:0.9rem; padding:0.5rem 1rem; background:#5D9BEC;" onclick="saveProject()">💾 Save</button>
+            <button class="big-btn" style="font-size:0.9rem; padding:0.5rem 1rem; background:#9B7EDE;" onclick="startNewProject()">✨ New</button>
+            <button class="big-btn" style="font-size:0.9rem; padding:0.5rem 1rem; background:#e25c5c;" onclick="deleteCurrentProject()">🗑️ Delete</button>
+        </div>
+
+        <!-- Project row -->
+        <div style="display:flex; gap:0.6rem; flex-wrap:wrap; margin-bottom:0.5rem;">
+            <select id="projectSelect" style="padding:0.5rem; border-radius:30px; border:2px solid #FFB347;" onchange="loadProject()">
                 <option value="">-- Load saved project --</option>
                 {% for proj in user_projects %}
                 <option value="{{ proj.id }}" {% if active_project and active_project.id == proj.id %}selected{% endif %}>{{ proj.title }}</option>
                 {% endfor %}
             </select>
-            <input type="text" id="projectTitle" placeholder="Project title" value="{{ active_project.title if active_project else '' }}" style="padding: 0.6rem; border-radius: 30px; border: 2px solid #FFB347; flex: 1; min-width: 150px;">
+            <input type="text" id="projectTitle" placeholder="Project title" value="{{ active_project.title if active_project else '' }}"
+                   style="padding:0.5rem; border-radius:30px; border:2px solid #FFB347; flex:1; min-width:140px;">
         </div>
         {% if user_projects %}
-        <p style="font-size: 0.85rem; color: #4a627a;">
+        <p style="font-size:0.82rem; color:#4a627a; margin-bottom:0.5rem;">
             <i class="fas fa-folder-open"></i>
-            <a href="{{ url_for('my_projects') }}" style="color: #5D9BEC; font-weight: 600;">View all my projects ({{ user_projects|length }})</a>
+            <a href="{{ url_for('my_projects') }}" style="color:#5D9BEC; font-weight:600;">All my projects ({{ user_projects|length }})</a>
         </p>
         {% endif %}
+
+        <!-- ── AI Code Helper ── -->
+        <div id="aiHelperPanel" style="background:white; border:3px solid #9B7EDE; border-radius:20px; padding:1.2rem; margin-top:1rem;">
+            <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.8rem;">
+                <span style="font-size:1.4rem;">🤖</span>
+                <strong style="color:#6B4F9E; font-size:1rem;">AI Code Helper</strong>
+                <span style="font-size:0.75rem; background:#9B7EDE22; color:#6B4F9E; padding:0.15rem 0.6rem; border-radius:20px;">Ask anything about your code</span>
+            </div>
+            <div id="aiHelperChat" style="max-height:220px; overflow-y:auto; margin-bottom:0.7rem; display:flex; flex-direction:column; gap:0.5rem;"></div>
+            <div style="display:flex; gap:0.5rem;">
+                <input type="text" id="aiHelperInput" placeholder="e.g. Why isn't my button working?" 
+                       style="flex:1; padding:0.5rem 0.8rem; border-radius:30px; border:2px solid #9B7EDE; font-family:inherit; font-size:0.88rem;"
+                       onkeydown="if(event.key==='Enter') askAI()">
+                <button onclick="askAI()" id="aiHelperBtn"
+                        style="background:#9B7EDE; color:white; border:none; border-radius:30px; padding:0.5rem 1rem; font-weight:700; cursor:pointer; white-space:nowrap;">
+                    Ask →
+                </button>
+            </div>
+        </div>
+
+        <!-- ── AI Code Explainer result panel ── -->
+        <div id="aiExplainPanel" style="display:none; background:white; border:3px solid #5D9BEC; border-radius:20px; padding:1.2rem; margin-top:0.8rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.7rem;">
+                <strong style="color:#3A6EA5;">🔍 Code Explanation</strong>
+                <button onclick="document.getElementById('aiExplainPanel').style.display='none'"
+                        style="background:none; border:none; cursor:pointer; color:#6c757d; font-size:1.1rem;">✕</button>
+            </div>
+            <div id="aiExplainContent" style="font-size:0.88rem; line-height:1.6; white-space:pre-wrap; color:#1e3a5f;"></div>
+        </div>
+
     </div>
 
-    <!-- Preview Panel -->
-    <div style="flex: 1; min-width: 300px;">
-        <h3>👀 Live Preview</h3>
-        <iframe id="preview" style="width:100%; height: 550px; border: 3px solid #FFB347; border-radius: 20px; background: white;"></iframe>
+    <!-- ── Right: preview ── -->
+    <div style="flex:1; min-width:300px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+            <strong style="font-size:1rem; color:#1e3a5f;">👀 Live Preview</strong>
+            <button onclick="runCode()" style="background:#1e5f4b; color:white; border:none; border-radius:20px; padding:0.3rem 0.8rem; font-size:0.8rem; cursor:pointer;">🔄 Refresh</button>
+        </div>
+        <iframe id="preview" style="width:100%; height:560px; border:3px solid #FFB347; border-radius:20px; background:white;"></iframe>
+
+        <!-- ── AI Project Ideas / Generator ── -->
+        <div style="background:white; border:3px solid #FFB347; border-radius:20px; padding:1.2rem; margin-top:1rem;">
+            <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.8rem;">
+                <span style="font-size:1.4rem;">✨</span>
+                <strong style="color:#C17D2E; font-size:1rem;">AI Project Generator</strong>
+                <span style="font-size:0.75rem; background:#FFB34722; color:#C17D2E; padding:0.15rem 0.6rem; border-radius:20px;">Describe it → AI writes the code</span>
+            </div>
+            <div style="display:flex; gap:0.5rem;">
+                <input type="text" id="aiGenInput" placeholder="e.g. A quiz about animals with 3 questions"
+                       style="flex:1; padding:0.5rem 0.8rem; border-radius:30px; border:2px solid #FFB347; font-family:inherit; font-size:0.88rem;"
+                       onkeydown="if(event.key==='Enter') generateProject()">
+                <button onclick="generateProject()" id="aiGenBtn"
+                        style="background:#FFB347; color:#1e2a3e; border:none; border-radius:30px; padding:0.5rem 1rem; font-weight:700; cursor:pointer; white-space:nowrap;">
+                    Generate ✨
+                </button>
+            </div>
+            <div id="aiGenStatus" style="display:none; margin-top:0.6rem; font-size:0.82rem; color:#6B4F9E; font-style:italic;"></div>
+        </div>
     </div>
+
 </div>
 
-<script>
-    window.currentProjectId = {{ active_project.id if active_project else 'null' }};
+<!-- Message popup (from script.js) -->
+<div id="messagePopup" style="display:none; position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:#1e5f4b; color:white; padding:0.8rem 1.5rem; border-radius:30px; font-weight:700; z-index:999; box-shadow:0 8px 24px rgba(0,0,0,0.2);"></div>
 
-    window.addEventListener('load', function() {
-        // Load template data passed from create.html via sessionStorage
-        const templateHtml = sessionStorage.getItem('templateHtml');
-        if (templateHtml) {
-            const htmlEditor = document.getElementById('htmlEditor');
-            const cssEditor  = document.getElementById('cssEditor');
-            const jsEditor   = document.getElementById('jsEditor');
-            const titleInput = document.getElementById('projectTitle');
-            if (htmlEditor) {
-                htmlEditor.value = templateHtml;
-                cssEditor.value  = sessionStorage.getItem('templateCss')  || '';
-                jsEditor.value   = sessionStorage.getItem('templateJs')   || '';
-                titleInput.value = sessionStorage.getItem('templateName') || 'Starter Project';
-                window.currentProjectId = null; // template isn't a saved project yet
-                sessionStorage.clear();
-            }
-        }
-        // Always auto-run so the preview is live immediately
-        if (typeof runCode === 'function') runCode();
+<style>
+.tab-btn { transition: 0.15s; }
+.tab-btn.active { background:#FFB347 !important; color:white; }
+.ai-bubble { padding:0.6rem 0.9rem; border-radius:16px; font-size:0.85rem; line-height:1.5; max-width:95%; white-space:pre-wrap; }
+.ai-bubble.user { background:#9B7EDE22; align-self:flex-end; color:#3d2b6b; border-bottom-right-radius:4px; }
+.ai-bubble.bot  { background:#f0f5ff;  align-self:flex-start; color:#1e3a5f;  border-bottom-left-radius:4px; }
+.ai-bubble.error{ background:#f8d7da;  color:#721c24; }
+.ai-bubble.thinking { color:#9B7EDE; font-style:italic; }
+</style>
+
+<script>
+window.currentProjectId = {{ active_project.id if active_project else 'null' }};
+
+// ── Tab switching ──────────────────────────────────────────────────────────
+let activeTab = 'html';
+function switchTab(tab) {
+    ['html','css','js'].forEach(t => {
+        document.getElementById(t + 'Editor').style.display = t === tab ? 'block' : 'none';
+        document.getElementById('tab-' + t).classList.toggle('active', t === tab);
     });
+    activeTab = tab;
+    hideExplainBtn();
+}
+
+// ── Highlight → Explain button ─────────────────────────────────────────────
+const explainBtn = document.getElementById('explainBtn');
+['htmlEditor','cssEditor','jsEditor'].forEach(id => {
+    document.getElementById(id)?.addEventListener('mouseup', positionExplainBtn);
+});
+function positionExplainBtn(e) {
+    const sel = window.getSelection ? window.getSelection().toString().trim() : '';
+    if (sel.length > 5) {
+        explainBtn.style.display = 'block';
+        explainBtn.style.top = (e.offsetY - 40) + 'px';
+        explainBtn.style.left = (e.offsetX) + 'px';
+    } else {
+        hideExplainBtn();
+    }
+}
+function hideExplainBtn() { explainBtn.style.display = 'none'; }
+document.addEventListener('mousedown', e => { if (e.target !== explainBtn) hideExplainBtn(); });
+
+async function explainSelection() {
+    const sel = window.getSelection ? window.getSelection().toString().trim() : '';
+    if (!sel) return;
+    hideExplainBtn();
+
+    const panel = document.getElementById('aiExplainPanel');
+    const content = document.getElementById('aiExplainContent');
+    panel.style.display = 'block';
+    content.textContent = '🤖 Thinking…';
+
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    try {
+        const res = await fetch('/api/ai/explain', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': meta?.content || '' },
+            body: JSON.stringify({ code: sel, lang: activeTab === 'js' ? 'javascript' : activeTab })
+        });
+        const data = await res.json();
+        content.textContent = data.success ? data.reply : ('❌ ' + data.message);
+    } catch { content.textContent = '❌ Network error. Please try again.'; }
+}
+
+// ── AI Code Helper ─────────────────────────────────────────────────────────
+const helperChat = document.getElementById('aiHelperChat');
+function addBubble(text, type) {
+    const d = document.createElement('div');
+    d.className = 'ai-bubble ' + type;
+    d.textContent = text;
+    helperChat.appendChild(d);
+    helperChat.scrollTop = helperChat.scrollHeight;
+    return d;
+}
+
+async function askAI() {
+    const input = document.getElementById('aiHelperInput');
+    const btn   = document.getElementById('aiHelperBtn');
+    const q = input.value.trim();
+    if (!q) return;
+    input.value = '';
+    addBubble(q, 'user');
+    const thinking = addBubble('🤖 Thinking…', 'bot thinking');
+    btn.disabled = true;
+
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    try {
+        const res = await fetch('/api/ai/help', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': meta?.content || '' },
+            body: JSON.stringify({
+                question: q,
+                html: document.getElementById('htmlEditor').value,
+                css:  document.getElementById('cssEditor').value,
+                js:   document.getElementById('jsEditor').value
+            })
+        });
+        const data = await res.json();
+        thinking.textContent = data.success ? data.reply : ('❌ ' + data.message);
+        thinking.classList.remove('thinking');
+        if (!data.success) thinking.classList.add('error');
+    } catch {
+        thinking.textContent = '❌ Network error. Please try again.';
+        thinking.classList.remove('thinking');
+        thinking.classList.add('error');
+    }
+    btn.disabled = false;
+    input.focus();
+}
+
+// ── AI Project Generator ───────────────────────────────────────────────────
+async function generateProject() {
+    const input  = document.getElementById('aiGenInput');
+    const btn    = document.getElementById('aiGenBtn');
+    const status = document.getElementById('aiGenStatus');
+    const idea = input.value.trim();
+    if (!idea) { input.focus(); return; }
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Generating…';
+    status.style.display = 'block';
+    status.textContent = '🤖 AI is writing your project code — this takes about 10 seconds…';
+
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    try {
+        const res = await fetch('/api/ai/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': meta?.content || '' },
+            body: JSON.stringify({ idea })
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('htmlEditor').value = data.html;
+            document.getElementById('cssEditor').value  = data.css;
+            document.getElementById('jsEditor').value   = data.js;
+            document.getElementById('projectTitle').value = data.title;
+            window.currentProjectId = null;
+            switchTab('html');
+            runCode();
+            status.textContent = `✅ "${data.title}" generated! Check the preview, then Save it.`;
+            input.value = '';
+        } else {
+            status.textContent = '❌ ' + data.message;
+        }
+    } catch {
+        status.textContent = '❌ Network error. Please try again.';
+    }
+    btn.disabled = false;
+    btn.textContent = 'Generate ✨';
+}
+
+// ── Template / project preload ────────────────────────────────────────────
+window.addEventListener('load', function() {
+    const templateHtml = sessionStorage.getItem('templateHtml');
+    if (templateHtml) {
+        document.getElementById('htmlEditor').value = templateHtml;
+        document.getElementById('cssEditor').value  = sessionStorage.getItem('templateCss')  || '';
+        document.getElementById('jsEditor').value   = sessionStorage.getItem('templateJs')   || '';
+        document.getElementById('projectTitle').value = sessionStorage.getItem('templateName') || '';
+        window.currentProjectId = null;
+        sessionStorage.clear();
+    }
+    if (typeof runCode === 'function') runCode();
+});
 </script>
 {% endblock %}

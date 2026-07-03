@@ -25,6 +25,10 @@
             <h3 style="font-size: 2rem; color: #1e5f4b;">{{ templates|length }}</h3>
             <p style="color: #4a627a; font-weight: 500;">Starter Templates</p>
         </div>
+        <div style="background: white; border-radius: 24px; padding: 1.2rem; text-align: center; border-left: 6px solid #9B7EDE; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <h3 style="font-size: 2rem; color: #1e5f4b;">{{ lessons|length }}</h3>
+            <p style="color: #4a627a; font-weight: 500;">Lessons Available</p>
+        </div>
     </div>
     
     <!-- Users Table -->
@@ -102,6 +106,63 @@
     </div>
     
     <!-- Quick Actions -->
+    <div style="background: #f0f5ff; border-radius: 32px; padding: 1.5rem; text-align: center; margin-bottom:2rem;">
+        <h3><i class="fas fa-book-open"></i> Lessons ({{ lessons|length }} total)</h3>
+        <div style="display:flex; flex-wrap:wrap; gap:0.8rem; justify-content:center; margin-top:1rem;">
+        {% for lesson in lessons %}
+        <span style="background:{% if lesson.track=='html' %}#5D9BEC{% elif lesson.track=='css' %}#FFB347{% else %}#9B7EDE{% endif %}; color:white; padding:0.3rem 0.9rem; border-radius:20px; font-size:0.8rem; font-weight:600;">
+            {{ lesson.track|upper }} {{ lesson.order }}: {{ lesson.title }}
+        </span>
+        {% endfor %}
+        </div>
+    </div>
+
+    <!-- AI Quiz Generator -->
+    <div style="background:white; border:4px solid #9B7EDE; border-radius:32px; padding:1.5rem; margin-bottom:2rem;">
+        <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:1rem;">
+            <span style="font-size:1.8rem;">🤖</span>
+            <div>
+                <h3 style="margin:0; color:#6B4F9E;">AI Quiz Generator</h3>
+                <p style="margin:0; font-size:0.85rem; color:#6c757d;">Generate multiple-choice questions and copy the JSON straight into any lesson's quiz_json field.</p>
+            </div>
+        </div>
+        <div style="display:flex; gap:0.8rem; flex-wrap:wrap; margin-bottom:0.8rem; align-items:center;">
+            <input type="text" id="quizTopic" placeholder="Topic e.g. CSS flexbox, JavaScript arrays"
+                   style="flex:2; min-width:200px; padding:0.6rem 1rem; border-radius:30px; border:2px solid #9B7EDE; font-family:inherit;">
+            <select id="quizTrack" style="padding:0.6rem 1rem; border-radius:30px; border:2px solid #9B7EDE;">
+                <option value="html">HTML</option>
+                <option value="css">CSS</option>
+                <option value="javascript">JavaScript</option>
+            </select>
+            <select id="quizCount" style="padding:0.6rem 1rem; border-radius:30px; border:2px solid #9B7EDE;">
+                <option value="3">3 questions</option>
+                <option value="4">4 questions</option>
+                <option value="5">5 questions</option>
+                <option value="6">6 questions</option>
+            </select>
+            <button id="quizGenBtn" onclick="generateQuiz()"
+                    style="background:#9B7EDE; color:white; border:none; border-bottom:4px solid #6B4F9E; border-radius:30px; padding:0.6rem 1.2rem; font-weight:700; cursor:pointer;">
+                Generate ✨
+            </button>
+        </div>
+        <div id="quizGenStatus" style="display:none; font-size:0.85rem; color:#6B4F9E; font-style:italic; margin-bottom:0.8rem;"></div>
+        <div id="quizGenResult" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                <strong style="color:#1e3a5f;">Generated Questions:</strong>
+                <button onclick="copyQuizJson()"
+                        style="background:#1e5f4b; color:white; border:none; border-radius:20px; padding:0.4rem 1rem; font-size:0.85rem; cursor:pointer; font-weight:600;">
+                    📋 Copy JSON
+                </button>
+            </div>
+            <div id="quizPreview" style="display:flex; flex-direction:column; gap:0.7rem; margin-bottom:0.8rem;"></div>
+            <details>
+                <summary style="cursor:pointer; color:#6B4F9E; font-weight:600; font-size:0.85rem;">▶ Show raw JSON (paste into quiz_json field)</summary>
+                <pre id="quizJsonRaw" style="background:#1e2a3e; color:#FFB347; border-radius:12px; padding:1rem; font-size:0.78rem; overflow-x:auto; white-space:pre-wrap; margin-top:0.5rem;"></pre>
+            </details>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
     <div style="background: #f0f5ff; border-radius: 32px; padding: 1.5rem; text-align: center;">
         <h3><i class="fas fa-cog"></i> Quick Actions</h3>
         <p style="margin: 1rem 0;">Use the Delete buttons in the tables above to remove users or projects. Deleting a user also removes their saved projects.</p>
@@ -109,6 +170,63 @@
 </div>
 
 <script>
+async function generateQuiz() {
+    const topic  = document.getElementById('quizTopic').value.trim();
+    const track  = document.getElementById('quizTrack').value;
+    const count  = document.getElementById('quizCount').value;
+    const btn    = document.getElementById('quizGenBtn');
+    const status = document.getElementById('quizGenStatus');
+    const result = document.getElementById('quizGenResult');
+    if (!topic) { document.getElementById('quizTopic').focus(); return; }
+
+    btn.disabled = true; btn.textContent = '⏳ Generating…';
+    status.style.display = 'block';
+    status.textContent = `🤖 Writing ${count} ${track.toUpperCase()} questions about "${topic}"…`;
+    result.style.display = 'none';
+
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    try {
+        const res = await fetch('/api/ai/quiz', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': meta ? meta.content : '' },
+            body: JSON.stringify({ topic, track, count: parseInt(count) })
+        });
+        const data = await res.json();
+        if (data.success) {
+            renderQuizPreview(data.questions);
+            document.getElementById('quizJsonRaw').textContent = JSON.stringify(data.questions, null, 2);
+            status.textContent = `✅ ${data.questions.length} questions generated! Review them below, then copy the JSON.`;
+            result.style.display = 'block';
+            window._generatedQuiz = data.questions;
+        } else {
+            status.textContent = '❌ ' + data.message;
+        }
+    } catch(e) {
+        status.textContent = '❌ Network error. Please try again.';
+    }
+    btn.disabled = false; btn.textContent = 'Generate ✨';
+}
+
+function renderQuizPreview(questions) {
+    const preview = document.getElementById('quizPreview');
+    preview.innerHTML = '';
+    questions.forEach((q, i) => {
+        const div = document.createElement('div');
+        div.style.cssText = 'background:#f8f9ff; border-radius:14px; padding:1rem; border-left:4px solid #9B7EDE;';
+        div.innerHTML = `<strong style="color:#1e3a5f">${i+1}. ${q.q}</strong><ol style="margin:0.5rem 0 0; padding-left:1.2rem;">` +
+            q.options.map((o,j) => `<li style="${j===q.answer ? 'color:#1e5f4b; font-weight:700;' : 'color:#4a627a;'}">${o}${j===q.answer?' ✅':''}</li>`).join('') +
+            '</ol>';
+        preview.appendChild(div);
+    });
+}
+
+function copyQuizJson() {
+    if (!window._generatedQuiz) return;
+    navigator.clipboard.writeText(JSON.stringify(window._generatedQuiz))
+        .then(() => alert('✅ JSON copied to clipboard! Paste it into the quiz_json field in your database editor.'))
+        .catch(() => { document.getElementById('quizJsonRaw').style.display='block'; alert('Select and copy the JSON from the box below.'); });
+}
+
 async function adminDeleteUser(userId) {
     if (!confirm('Delete this user? Their saved projects will also be deleted. This can\'t be undone!')) return;
     const meta = document.querySelector('meta[name="csrf-token"]');
