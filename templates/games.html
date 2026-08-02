@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Games{% endblock %}
+
+{% block content %}
+<div class="hero" style="background: linear-gradient(135deg, #1e2a3e, #2d3f5a); color:white;">
+  <div class="hero-text">
+    <h1 style="color:white;">🎮 <span>Games</span></h1>
+    <p style="color:#c5d5e8;">Play arcade games right here, or open any game in the Playground and remix the code!</p>
+  </div>
+  <div class="hero-avatar" style="background:#FFB347; color:#1e2a3e;"><i class="fas fa-gamepad"></i></div>
+</div>
+
+<!-- Arcade Games -->
+<section style="padding:2.5rem 2rem; background:#f0f5ff;">
+  <h2 class="section-title"><span>🕹️ Arcade — Play Now</span></h2>
+  <p style="text-align:center; color:#4a627a; margin-bottom:2rem;">No login needed — just click and play!</p>
+  <div style="display:flex; flex-wrap:wrap; gap:1.5rem; justify-content:center;">
+    {% for game in arcade %}
+    <div style="background:white; border-radius:32px; border:5px solid {{ game.color }}; box-shadow:0 12px 0 {{ game.color }}88; width:240px; text-align:center; padding:1.8rem; transition:0.2s;"
+         onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+      <i class="fas {{ game.icon }}" style="font-size:3rem; background:{{ game.color }}; padding:1rem; border-radius:50%; color:white;"></i>
+      <h3 style="margin:1rem 0 0.5rem;">{{ game.name }}</h3>
+      <p style="font-size:0.88rem; color:#4a627a; margin-bottom:1rem;">{{ game.description }}</p>
+      <span style="display:inline-block; background:#1e2a3e; color:white; padding:0.2rem 0.8rem; border-radius:20px; font-size:0.75rem; margin-bottom:1rem;">{{ game.difficulty }}</span>
+      <div style="display:flex; flex-direction:column; gap:0.6rem;">
+        <a href="{{ url_for('play_game', template_id=game.id) }}" class="big-btn" style="text-decoration:none; font-size:0.95rem; padding:0.6rem; background:{{ game.color }};">
+          ▶ Play Now
+        </a>
+        <button class="big-btn" style="font-size:0.85rem; padding:0.5rem; background:#5D9BEC;"
+                onclick="remixGame({{ game.id }}, '{{ game.name }}')">
+          🔧 Remix in Editor
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Art & Creative Tools -->
+{% if art %}
+<section style="padding:2.5rem 2rem; background:white;">
+  <h2 class="section-title"><span>🎨 Creative Tools</span></h2>
+  <p style="text-align:center; color:#4a627a; margin-bottom:2rem;">Interactive experiments — play around and see what you create!</p>
+  <div style="display:flex; flex-wrap:wrap; gap:1.5rem; justify-content:center;">
+    {% for tool in art %}
+    <div style="background:white; border-radius:32px; border:5px solid {{ tool.color }}; box-shadow:0 12px 0 {{ tool.color }}88; width:240px; text-align:center; padding:1.8rem; transition:0.2s;"
+         onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+      <i class="fas {{ tool.icon }}" style="font-size:3rem; background:{{ tool.color }}; padding:1rem; border-radius:50%; color:white;"></i>
+      <h3 style="margin:1rem 0 0.5rem;">{{ tool.name }}</h3>
+      <p style="font-size:0.88rem; color:#4a627a; margin-bottom:1rem;">{{ tool.description }}</p>
+      <div style="display:flex; flex-direction:column; gap:0.6rem;">
+        <a href="{{ url_for('play_game', template_id=tool.id) }}" class="big-btn" style="text-decoration:none; font-size:0.95rem; padding:0.6rem; background:{{ tool.color }};">
+          ▶ Open Tool
+        </a>
+        <button class="big-btn" style="font-size:0.85rem; padding:0.5rem; background:#5D9BEC;"
+                onclick="remixGame({{ tool.id }}, '{{ tool.name }}')">
+          🔧 Remix in Editor
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<div class="cta" style="background:#1e2a3e; border:none;">
+  <h2 style="color:white;">🛠️ Build your own game!</h2>
+  <p style="color:#c5d5e8;">Learn how in the JavaScript track, then remix any game above as your starting point.</p>
+  <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin-top:1rem;">
+    <a href="{{ url_for('learn') }}" class="big-btn" style="text-decoration:none;">📚 Start Learning</a>
+    <a href="{{ url_for('create') }}" class="big-btn" style="text-decoration:none; background:#FFB347; color:#1e2a3e;">✨ Open Templates</a>
+  </div>
+</div>
+
+<script>
+async function remixGame(templateId, name) {
+  {% if current_user.is_authenticated %}
+  try {
+    const res = await fetch(`/api/load_template/${templateId}`);
+    const data = await res.json();
+    if (data.success) {
+      sessionStorage.setItem('templateHtml', data.html_code);
+      sessionStorage.setItem('templateCss', data.css_code);
+      sessionStorage.setItem('templateJs', data.js_code);
+      sessionStorage.setItem('templateName', 'My ' + name);
+      window.location.href = "{{ url_for('play') }}";
+    }
+  } catch(e) { alert('Error loading template'); }
+  {% else %}
+  if (confirm('You need to be logged in to remix games in the editor. Go to login?')) {
+    window.location.href = "{{ url_for('login') }}";
+  }
+  {% endif %}
+}
+</script>
+{% endblock %}

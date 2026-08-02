@@ -1,6 +1,9 @@
 import os
 import json
+import smtplib
 import requests as http_requests
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -1102,45 +1105,189 @@ def admin_delete_project(project_id):
 @app.route('/healthz')
 def health_check(): return jsonify({'status': 'ok'})
 
-# ==================== AI PROXY ROUTES ====================
-# All Claude API calls go through Flask so the API key never touches the browser.
-# Each endpoint has a tightly scoped system prompt for kid-safety.
+# ==================== ABOUT & CONTACT ====================
+CONTACT_EMAIL = os.getenv('CONTACT_EMAIL', 'info@nexapals.co.za')
 
-ANTHROPIC_API = 'https://api.anthropic.com/v1/messages'
-CLAUDE_MODEL  = 'claude-sonnet-4-6'
+def _send_contact_email(sender_name, sender_email, subject, message):
+    """Send contact form submission to info@nexapals.co.za via Gmail SMTP."""
+    smtp_user = os.getenv('SMTP_USER', '')
+    smtp_pass = os.getenv('SMTP_PASS', '')
+    if not smtp_user or not smtp_pass:
+        return False, 'Email not configured'
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = f'[Nexa Pals Contact] {subject}'
+        msg['From']    = smtp_user
+        msg['To']      = CONTACT_EMAIL
+        msg['Reply-To'] = f'{sender_name} <{sender_email}>'
+        body = (
+            f'Name: {sender_name}\n'
+            f'Email: {sender_email}\n'
+            f'Subject: {subject}\n\n'
+            f'Message:\n{message}\n\n'
+            f'---\nSent via nexapals.co.za contact form'
+        )
+        msg.attach(MIMEText(body, 'plain'))
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(smtp_user, CONTACT_EMAIL, msg.as_string())
+        return True, 'Sent'
+    except Exception as e:
+        return False, str(e)
 
-def _claude(system: str, user_msg: str, max_tokens: int = 600) -> str:
-    """Call Claude and return the text content, or raise on error."""
-    api_key = os.getenv('ANTHROPIC_API_KEY', '')
-    if not api_key:
-        raise ValueError('ANTHROPIC_API_KEY not set')
-    resp = http_requests.post(
-        ANTHROPIC_API,
-        headers={
-            'x-api-key': api_key,
-            'anthropic-version': '2023-06-01',
-            'content-type': 'application/json',
-        },
-        json={
-            'model': CLAUDE_MODEL,
-            'max_tokens': max_tokens,
-            'system': system,
-            'messages': [{'role': 'user', 'content': user_msg}],
-        },
-        timeout=30,
-    )
-    resp.raise_for_status()
-    return resp.json()['content'][0]['text']
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+@app.route('/contact', methods=['GET', 'POST'])
+def contact():
+    if request.method == 'POST':
+        name    = request.form.get('name', '').strip()[:100]
+        email   = request.form.get('email', '').strip()[:100]
+        subject = request.form.get('subject', '').strip()[:200]
+        message = request.form.get('message', '').strip()[:2000]
+        if not all([name, email, message]):
+            flash('Please fill in all required fields.')
+            return redirect(url_for('contact'))
+        ok, err = _send_contact_email(name, email, subject or 'General Enquiry', message)
+        if ok:
+            flash(f"Thanks {name}! We'll get back to you at {email} soon. 🎉")
+        else:
+            # Still show success to user — log the error server-side
+            print(f'[CONTACT EMAIL ERROR] {err}')
+            flash(f"Thanks {name}! We received your message and will get back to you soon. 🎉")
+        return redirect(url_for('contact'))
+    return render_template('contact.html')
+
+# ==================== AI PROVIDERS ====================
+# Architecture:
+#   Fast Chat  → Groq  (llama-3.3-70b-versatile)  — low-latency, real-time tutoring
+#   Structured → Gemini (gemini-2.5-flash)          — enforced JSON output for quizzes
+#   Fallback   → if Groq hits 429 / outage, seamlessly retry via Gemini
+#
+# API keys never touch the browser — all calls are server-side proxies.
+
+from groq import Groq as _GroqClient
+from google import genai as _genai
+from google.genai import types as _genai_types
+
+GROQ_MODEL   = 'llama-3.3-70b-versatile'
+GEMINI_MODEL = 'gemini-2.5-flash'
 
 _KID_SAFE = (
-    'You are a friendly coding tutor for kids aged 10–14 on Nexa Pals. '
-    'Always be encouraging, patient, and age-appropriate. '
-    'Keep answers short (3–6 sentences max unless you are writing code). '
-    'Never produce content that is violent, adult, political, or off-topic from coding. '
-    'If asked about anything unrelated to coding or learning, politely redirect. '
+    'You are a friendly, encouraging coding tutor for kids aged 10–14 on Nexa Pals. '
+    'Never just give the answer — guide the student to understand the concept themselves. '
+    'Use simple language, short sentences, and relatable analogies (sport, food, games). '
+    'Celebrate effort: phrases like "Great question!", "You\'re so close!", "Nice thinking!". '
+    'Keep responses concise (4–7 sentences) unless writing code. '
+    'Never produce content that is violent, adult, political, or unrelated to coding. '
+    'If asked anything off-topic, warmly redirect back to coding.'
 )
 
-# ── 1. Code Explainer ────────────────────────────────────────────────────────
+# ── Core provider functions ───────────────────────────────────────────────────
+
+def _chat_groq(system: str, messages: list, max_tokens: int = 700) -> str:
+    """
+    Fast chat via Groq (llama-3.3-70b-versatile).
+    messages: list of {'role': 'user'|'assistant', 'content': str}
+    Raises groq.RateLimitError on 429, groq.APIStatusError on other API errors.
+    """
+    api_key = os.getenv('GROQ_API_KEY', '')
+    if not api_key:
+        raise ValueError('GROQ_API_KEY not set')
+    client = _GroqClient(api_key=api_key)
+    full_messages = [{'role': 'system', 'content': system}] + messages
+    completion = client.chat.completions.create(
+        model=GROQ_MODEL,
+        messages=full_messages,
+        max_tokens=max_tokens,
+        temperature=0.7,
+    )
+    return completion.choices[0].message.content
+
+def _chat_gemini(system: str, messages: list, max_tokens: int = 700) -> str:
+    """
+    Fallback chat via Gemini (gemini-2.5-flash).
+    Converts message history to Gemini's Content format.
+    """
+    api_key = os.getenv('GEMINI_API_KEY', '')
+    if not api_key:
+        raise ValueError('GEMINI_API_KEY not set')
+    client = _genai.Client(api_key=api_key)
+    # Gemini takes history as list of Content objects; last user turn is the prompt
+    history = []
+    for msg in messages[:-1]:
+        role = 'user' if msg['role'] == 'user' else 'model'
+        history.append(_genai_types.Content(role=role, parts=[_genai_types.Part(text=msg['content'])]))
+    last_msg = messages[-1]['content'] if messages else ''
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=history + [_genai_types.Content(role='user', parts=[_genai_types.Part(text=last_msg)])],
+        config=_genai_types.GenerateContentConfig(
+            system_instruction=system,
+            max_output_tokens=max_tokens,
+            temperature=0.7,
+        ),
+    )
+    return response.text
+
+def _quiz_gemini(system: str, prompt: str, max_tokens: int = 1000) -> str:
+    """
+    Structured JSON quiz generation via Gemini with enforced JSON output.
+    Uses responseMimeType='application/json' so the response is always
+    valid JSON — no markdown fences to strip.
+    """
+    api_key = os.getenv('GEMINI_API_KEY', '')
+    if not api_key:
+        raise ValueError('GEMINI_API_KEY not set')
+    client = _genai.Client(api_key=api_key)
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=[_genai_types.Content(role='user', parts=[_genai_types.Part(text=prompt)])],
+        config=_genai_types.GenerateContentConfig(
+            system_instruction=system,
+            max_output_tokens=max_tokens,
+            temperature=0.4,
+            response_mime_type='application/json',
+        ),
+    )
+    return response.text
+
+# ── Fallback wrapper ──────────────────────────────────────────────────────────
+
+import groq as _groq_module
+
+def _chat_with_fallback(system: str, messages: list, max_tokens: int = 700) -> tuple[str, str]:
+    """
+    Try Groq first (fast). On rate-limit (429) or outage, fall back to Gemini.
+    Returns (reply_text, provider_used) so callers can log which path was taken.
+    """
+    try:
+        reply = _chat_groq(system, messages, max_tokens)
+        return reply, 'groq'
+    except ValueError:
+        # Groq key missing — try Gemini directly
+        pass
+    except _groq_module.RateLimitError:
+        # 429 — Groq quota hit, route to Gemini
+        pass
+    except _groq_module.APIStatusError as e:
+        # 5xx outage or other server error — route to Gemini
+        if e.status_code < 500 and e.status_code != 429:
+            raise  # 4xx that isn't rate-limit: re-raise (bad request etc.)
+    except Exception:
+        pass  # Any unexpected Groq error → try Gemini
+
+    # Gemini fallback
+    reply = _chat_gemini(system, messages, max_tokens)
+    return reply, 'gemini'
+
+# ── Route helpers ─────────────────────────────────────────────────────────────
+
+def _err(msg, code=503):
+    return jsonify({'success': False, 'message': msg}), code
+
+# ── 1. Code Explainer ─────────────────────────────────────────────────────────
 @app.route('/api/ai/explain', methods=['POST'])
 @login_required
 def ai_explain():
@@ -1148,23 +1295,26 @@ def ai_explain():
     code = (data.get('code') or '').strip()[:2000]
     lang = data.get('lang', 'code')
     if not code:
-        return jsonify({'success': False, 'message': 'No code provided'}), 400
+        return _err('No code provided', 400)
     system = (
         _KID_SAFE +
         'You explain code in plain English for a 10-year-old. '
-        'Break it down line by line or concept by concept. '
-        'Use simple analogies. Start with "Here\'s what this code does:" '
-        'then explain each important part. Use bullet points for clarity.'
+        'Start with "Here\'s what this code does:" then explain each important part. '
+        'Use bullet points. Use simple analogies — compare code to things kids know. '
+        'Highlight any cool or clever parts to build excitement about coding.'
     )
     try:
-        reply = _claude(system, f'Please explain this {lang} code:\n\n```{lang}\n{code}\n```')
+        reply, _ = _chat_with_fallback(
+            system,
+            [{'role': 'user', 'content': f'Please explain this {lang} code:\n\n```{lang}\n{code}\n```'}]
+        )
         return jsonify({'success': True, 'reply': reply})
     except ValueError as e:
-        return jsonify({'success': False, 'message': str(e)}), 503
-    except Exception as e:
-        return jsonify({'success': False, 'message': 'AI unavailable right now'}), 503
+        return _err(str(e))
+    except Exception:
+        return _err('AI unavailable right now — please try again in a moment')
 
-# ── 2. Code Helper (Playground) ──────────────────────────────────────────────
+# ── 2. Code Helper (Playground) ───────────────────────────────────────────────
 @app.route('/api/ai/help', methods=['POST'])
 @login_required
 def ai_help():
@@ -1174,68 +1324,59 @@ def ai_help():
     css  = (data.get('css')  or '')[:1000]
     js   = (data.get('js')   or '')[:1000]
     if not question:
-        return jsonify({'success': False, 'message': 'Please type a question'}), 400
+        return _err('Please type a question', 400)
     system = (
         _KID_SAFE +
         'You are helping a kid debug or improve their HTML/CSS/JavaScript project. '
-        'When you spot bugs, explain what was wrong AND show the corrected code. '
-        'When giving code, wrap it in ```html, ```css, or ```js fences so it renders nicely. '
-        'Always explain WHY the fix works, not just what to change.'
+        'Do NOT just give the fixed code — first ask "What do you think is happening?" '
+        'or explain the concept behind the bug so they learn. '
+        'Then show the corrected code wrapped in ```html, ```css, or ```js fences. '
+        'Always explain WHY the fix works. End with an encouraging line.'
     )
     context = f'HTML:\n```html\n{html}\n```\nCSS:\n```css\n{css}\n```\nJS:\n```js\n{js}\n```'
     user_msg = f"Here's my current code:\n\n{context}\n\nMy question: {question}"
     try:
-        reply = _claude(system, user_msg, max_tokens=800)
+        reply, _ = _chat_with_fallback(system, [{'role': 'user', 'content': user_msg}], max_tokens=900)
         return jsonify({'success': True, 'reply': reply})
     except ValueError as e:
-        return jsonify({'success': False, 'message': str(e)}), 503
+        return _err(str(e))
     except Exception:
-        return jsonify({'success': False, 'message': 'AI unavailable right now'}), 503
+        return _err('AI unavailable right now — please try again in a moment')
 
-# ── 3. Lesson Tutor ──────────────────────────────────────────────────────────
+# ── 3. Lesson Tutor (multi-turn, with history) ────────────────────────────────
 @app.route('/api/ai/tutor', methods=['POST'])
 @login_required
 def ai_tutor():
     data = request.get_json(silent=True) or {}
-    question  = (data.get('question') or '').strip()[:500]
+    question     = (data.get('question') or '').strip()[:500]
     lesson_title = (data.get('lesson_title') or 'this lesson')[:100]
-    track     = (data.get('track') or 'web coding')[:20]
-    history   = data.get('history', [])[:8]   # last 8 turns max
+    track        = (data.get('track') or 'web coding')[:20]
+    history      = data.get('history', [])[:8]
     if not question:
-        return jsonify({'success': False, 'message': 'Please type a question'}), 400
+        return _err('Please type a question', 400)
     system = (
         _KID_SAFE +
-        f'You are a tutor helping a student understand the lesson "{lesson_title}" '
-        f'in the {track} track. '
-        'Stay focused on this lesson topic only. '
-        'Give one clear example when helpful. '
-        'If they are confused, try a different analogy. '
-        'Never just give them the quiz answers directly — guide them to understand instead.'
+        f'You are tutoring a student on the lesson "{lesson_title}" in the {track} track. '
+        'Stay focused on THIS lesson topic only — gently redirect if they go off-topic. '
+        'Guide with questions: "What do you think would happen if…?", "Can you spot the pattern?". '
+        'Give one clear example when helpful, using the lesson\'s own code snippets. '
+        'NEVER directly give quiz answers — guide understanding instead. '
+        'Remember what the student said earlier in this conversation.'
     )
     messages = []
     for turn in history:
-        role = turn.get('role')
-        content = (turn.get('content') or '')[:300]
+        role    = turn.get('role')
+        content = (turn.get('content') or '')[:400]
         if role in ('user', 'assistant') and content:
             messages.append({'role': role, 'content': content})
     messages.append({'role': 'user', 'content': question})
-    api_key = os.getenv('ANTHROPIC_API_KEY', '')
-    if not api_key:
-        return jsonify({'success': False, 'message': 'ANTHROPIC_API_KEY not set'}), 503
     try:
-        resp = http_requests.post(
-            ANTHROPIC_API,
-            headers={'x-api-key': api_key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json'},
-            json={'model': CLAUDE_MODEL, 'max_tokens': 600, 'system': system, 'messages': messages},
-            timeout=30,
-        )
-        resp.raise_for_status()
-        reply = resp.json()['content'][0]['text']
+        reply, _ = _chat_with_fallback(system, messages, max_tokens=700)
         return jsonify({'success': True, 'reply': reply})
     except ValueError as e:
-        return jsonify({'success': False, 'message': str(e)}), 503
+        return _err(str(e))
     except Exception:
-        return jsonify({'success': False, 'message': 'AI unavailable right now'}), 503
+        return _err('AI unavailable right now — please try again in a moment')
 
 # ── 4. Project Idea → Code Generator ─────────────────────────────────────────
 @app.route('/api/ai/generate', methods=['POST'])
@@ -1244,71 +1385,93 @@ def ai_generate():
     data = request.get_json(silent=True) or {}
     idea = (data.get('idea') or '').strip()[:400]
     if not idea:
-        return jsonify({'success': False, 'message': 'Please describe your idea'}), 400
+        return _err('Please describe your idea', 400)
     system = (
         _KID_SAFE +
         'You generate starter HTML/CSS/JS projects for kids based on their idea. '
         'Output ONLY valid JSON with exactly these keys: '
         '"title" (short project name, max 40 chars), '
-        '"html" (complete HTML body content, no <html>/<head>/<body> tags needed), '
+        '"html" (complete HTML body content, no <html>/<head>/<body> tags), '
         '"css" (all CSS), '
         '"js" (all JavaScript). '
-        'The code should be beginner-friendly, well-commented, and fun. '
-        'Make it interactive where possible. '
+        'Code must be beginner-friendly, well-commented, and interactive. '
         'Keep total code under 80 lines. '
-        'Output raw JSON only — no markdown fences, no explanation, just the JSON object.'
+        'Output raw JSON only — no markdown fences, no explanation.'
     )
     try:
-        raw = _claude(system, f'Create a fun web project for this idea: {idea}', max_tokens=1200)
-        # Strip any accidental markdown fences
-        clean = raw.strip().lstrip('`').lstrip('json').strip('`').strip()
-        parsed = json.loads(clean)
-        required = {'title', 'html', 'css', 'js'}
-        if not required.issubset(parsed.keys()):
+        # Use Gemini with enforced JSON for reliable parsing
+        raw = _quiz_gemini(system, f'Create a fun web project for this idea: {idea}', max_tokens=1400)
+        parsed = json.loads(raw)
+        if not {'title', 'html', 'css', 'js'}.issubset(parsed.keys()):
             raise ValueError('Missing keys in AI response')
-        return jsonify({'success': True, **{k: parsed[k] for k in ('title','html','css','js')}})
+        return jsonify({'success': True, **{k: parsed[k] for k in ('title', 'html', 'css', 'js')}})
     except (json.JSONDecodeError, ValueError):
-        return jsonify({'success': False, 'message': 'AI returned unexpected format — try rephrasing your idea'}), 500
+        # Gemini failed or key missing — try chat fallback
+        try:
+            raw2, _ = _chat_with_fallback(system, [{'role': 'user', 'content': f'Create a fun web project for this idea: {idea}'}], max_tokens=1400)
+            clean = raw2.strip().strip('`').lstrip('json').strip('`').strip()
+            parsed2 = json.loads(clean)
+            if not {'title', 'html', 'css', 'js'}.issubset(parsed2.keys()):
+                raise ValueError('Missing keys')
+            return jsonify({'success': True, **{k: parsed2[k] for k in ('title', 'html', 'css', 'js')}})
+        except Exception:
+            return _err('AI returned unexpected format — try rephrasing your idea', 500)
+    except ValueError as e:
+        return _err(str(e))
     except Exception:
-        return jsonify({'success': False, 'message': 'AI unavailable right now'}), 503
+        return _err('AI unavailable right now — please try again in a moment')
 
-# ── 5. Admin Quiz Generator ───────────────────────────────────────────────────
+# ── 5. Admin Quiz Generator (Gemini with enforced JSON) ───────────────────────
 @app.route('/api/ai/quiz', methods=['POST'])
 @login_required
 def ai_quiz():
     if current_user.role != 'admin':
-        return jsonify({'success': False, 'message': 'Admin access only'}), 403
-    data = request.get_json(silent=True) or {}
+        return _err('Admin access only', 403)
+    data  = request.get_json(silent=True) or {}
     topic = (data.get('topic') or '').strip()[:200]
     track = (data.get('track') or 'web coding')[:30]
     count = min(int(data.get('count', 3)), 6)
     if not topic:
-        return jsonify({'success': False, 'message': 'Please provide a topic'}), 400
+        return _err('Please provide a topic', 400)
     system = (
-        'You generate multiple-choice quiz questions about web coding for kids aged 10–14. '
+        f'You generate multiple-choice quiz questions about web coding for kids aged 10–14. '
         f'Output ONLY a JSON array of exactly {count} question objects. '
         'Each object must have: '
-        '"q" (the question string), '
+        '"q" (question string), '
         '"options" (array of exactly 4 answer strings), '
-        '"answer" (0-based index of the correct option). '
-        'Questions should test understanding, not just memorisation. '
-        'Keep language simple and age-appropriate. '
-        'Output raw JSON array only — no markdown, no explanation.'
+        '"answer" (0-based integer index of the correct option). '
+        'Questions must test understanding, not just memorisation. '
+        'Language must be simple and age-appropriate. '
+        'Output a raw JSON array only.'
     )
+    prompt = f'Generate {count} quiz questions about: {topic} (track: {track})'
     try:
-        raw = _claude(system, f'Generate {count} quiz questions about: {topic} (track: {track})', max_tokens=900)
-        clean = raw.strip().lstrip('`').lstrip('json').strip('`').strip()
-        questions = json.loads(clean)
+        # Gemini primary — enforced JSON means no fences to strip, reliable parse every time
+        raw = _quiz_gemini(system, prompt, max_tokens=1000)
+        questions = json.loads(raw)
         if not isinstance(questions, list):
             raise ValueError('Expected a JSON array')
         for q in questions:
-            if not {'q','options','answer'}.issubset(q.keys()):
+            if not {'q', 'options', 'answer'}.issubset(q.keys()):
                 raise ValueError('Missing question fields')
+            if len(q['options']) != 4:
+                raise ValueError('Each question must have exactly 4 options')
         return jsonify({'success': True, 'questions': questions})
     except (json.JSONDecodeError, ValueError) as e:
-        return jsonify({'success': False, 'message': f'AI returned unexpected format: {e}'}), 500
+        # Gemini JSON failed — fallback to Groq chat with manual parse
+        try:
+            raw2, _ = _chat_with_fallback(system, [{'role': 'user', 'content': prompt}], max_tokens=1000)
+            clean = raw2.strip().strip('`').lstrip('json').strip('`').strip()
+            questions2 = json.loads(clean)
+            if not isinstance(questions2, list):
+                raise ValueError('Expected array')
+            return jsonify({'success': True, 'questions': questions2})
+        except Exception:
+            return _err(f'AI returned unexpected format — try again: {e}', 500)
+    except ValueError as e:
+        return _err(str(e))
     except Exception:
-        return jsonify({'success': False, 'message': 'AI unavailable right now'}), 503
+        return _err('AI unavailable right now — please try again in a moment')
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

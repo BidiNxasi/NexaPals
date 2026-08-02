@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Contact Us{% endblock %}
+
+{% block content %}
+
+<div class="hero" style="background: linear-gradient(135deg, #E6F0FF, #FFF3E0);">
+  <div class="hero-text">
+    <h1>✉️ <span>Get in Touch</span></h1>
+    <p>Questions, feedback, school partnerships, or just want to say hi — we'd love to hear from you!</p>
+  </div>
+  <div class="hero-avatar" style="background:#5D9BEC;"><i class="fas fa-envelope"></i></div>
+</div>
+
+<div style="max-width:900px; margin:2.5rem auto; padding:0 1.5rem; display:flex; gap:2rem; flex-wrap:wrap;">
+
+  <!-- Contact form -->
+  <div style="flex:2; min-width:280px; background:white; border-radius:32px; padding:2rem; border:4px solid #FFB347; box-shadow:0 12px 0 #c17d2e;">
+    <h2 style="margin-top:0; color:#1e3a5f;">Send us a message</h2>
+
+    <form method="POST" action="{{ url_for('contact') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div style="margin-bottom:1.2rem;">
+        <label style="display:block; font-weight:700; margin-bottom:0.4rem; color:#1e5f4b;">
+          <i class="fas fa-user"></i> Your Name *
+        </label>
+        <input type="text" name="name" required placeholder="e.g. Karabo Mokoena"
+               style="width:100%; padding:0.7rem 1rem; border-radius:30px; border:2px solid #FFB347; font-family:inherit; box-sizing:border-box;">
+      </div>
+
+      <div style="margin-bottom:1.2rem;">
+        <label style="display:block; font-weight:700; margin-bottom:0.4rem; color:#1e5f4b;">
+          <i class="fas fa-envelope"></i> Email Address *
+        </label>
+        <input type="email" name="email" required placeholder="your@email.com"
+               style="width:100%; padding:0.7rem 1rem; border-radius:30px; border:2px solid #FFB347; font-family:inherit; box-sizing:border-box;">
+      </div>
+
+      <div style="margin-bottom:1.2rem;">
+        <label style="display:block; font-weight:700; margin-bottom:0.4rem; color:#1e5f4b;">
+          <i class="fas fa-tag"></i> Subject
+        </label>
+        <select name="subject" style="width:100%; padding:0.7rem 1rem; border-radius:30px; border:2px solid #FFB347; font-family:inherit; box-sizing:border-box;">
+          <option value="General Enquiry">General Enquiry</option>
+          <option value="School Partnership">School Partnership</option>
+          <option value="Bug Report">Bug Report</option>
+          <option value="Feature Request">Feature Request</option>
+          <option value="Media / Press">Media / Press</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:1.5rem;">
+        <label style="display:block; font-weight:700; margin-bottom:0.4rem; color:#1e5f4b;">
+          <i class="fas fa-comment"></i> Message *
+        </label>
+        <textarea name="message" required rows="6" placeholder="Tell us what's on your mind…"
+                  style="width:100%; padding:0.7rem 1rem; border-radius:20px; border:2px solid #FFB347; font-family:inherit; resize:vertical; box-sizing:border-box;"></textarea>
+      </div>
+
+      <button type="submit" class="big-btn" style="width:100%; font-size:1.1rem;">
+        <i class="fas fa-paper-plane"></i> Send Message
+      </button>
+    </form>
+  </div>
+
+  <!-- Contact details sidebar -->
+  <div style="flex:1; min-width:220px; display:flex; flex-direction:column; gap:1.2rem;">
+
+    <div style="background:white; border-radius:24px; padding:1.5rem; border:3px solid #5D9BEC; box-shadow:0 8px 0 #3A6EA5;">
+      <h3 style="margin-top:0; color:#1e3a5f;"><i class="fas fa-envelope" style="color:#5D9BEC;"></i> Email</h3>
+      <a href="mailto:info@nexapals.co.za" style="color:#5D9BEC; font-weight:700; word-break:break-all;">info@nexapals.co.za</a>
+      <p style="font-size:0.82rem; color:#6c757d; margin-top:0.4rem;">We reply within 1–2 business days.</p>
+    </div>
+
+    <div style="background:white; border-radius:24px; padding:1.5rem; border:3px solid #9B7EDE; box-shadow:0 8px 0 #6B4F9E;">
+      <h3 style="margin-top:0; color:#1e3a5f;"><i class="fas fa-map-marker-alt" style="color:#9B7EDE;"></i> Location</h3>
+      <p style="margin:0; color:#1e3a5f; font-weight:600;">University of the Free State</p>
+      <p style="margin:0.3rem 0 0; font-size:0.85rem; color:#6c757d;">Bloemfontein, Free State<br>South Africa</p>
+    </div>
+
+    <div style="background:white; border-radius:24px; padding:1.5rem; border:3px solid #FFB347; box-shadow:0 8px 0 #c17d2e;">
+      <h3 style="margin-top:0; color:#1e3a5f;"><i class="fas fa-school" style="color:#FFB347;"></i> Schools</h3>
+      <p style="font-size:0.88rem; color:#1e3a5f; line-height:1.6; margin:0;">Interested in bringing Nexa Pals to your school? Select <strong>School Partnership</strong> in the form and tell us about your school.</p>
+    </div>
+
+    <div style="background:white; border-radius:24px; padding:1.5rem; border:3px solid #1e5f4b; box-shadow:0 8px 0 #143d30;">
+      <h3 style="margin-top:0; color:#1e3a5f;"><i class="fas fa-clock" style="color:#1e5f4b;"></i> Response Time</h3>
+      <p style="font-size:0.88rem; color:#1e3a5f; margin:0; line-height:1.6;">
+        🟢 Mon–Fri: within 24 hours<br>
+        🟡 Weekends: within 48 hours
+      </p>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ template.name }}{% endblock %}
+
+{% block content %}
+<div style="background:#1e2a3e; padding:0.8rem 2rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+  <div style="display:flex; align-items:center; gap:1rem;">
+    <a href="{{ url_for('games') }}" style="color:#FFB347; font-weight:600; text-decoration:none;">← Games</a>
+    <span style="color:white; font-weight:700; font-size:1.1rem;">
+      <i class="fas {{ template.icon }}" style="color:{{ template.color }};"></i> {{ template.name }}
+    </span>
+    <span style="background:#2d3f5a; color:#c5d5e8; padding:0.2rem 0.8rem; border-radius:20px; font-size:0.78rem;">{{ template.difficulty }}</span>
+  </div>
+  <div style="display:flex; gap:0.6rem;">
+    <button onclick="remixInEditor()" class="big-btn" style="font-size:0.85rem; padding:0.5rem 1rem; background:#5D9BEC;">
+      🔧 Remix in Editor
+    </button>
+    <button onclick="reloadGame()" class="big-btn" style="font-size:0.85rem; padding:0.5rem 1rem; background:#9B7EDE;">
+      🔄 Restart
+    </button>
+  </div>
+</div>
+
+<!-- Full-screen game iframe -->
+<div style="background:#0d1520; min-height:calc(100vh - 200px); display:flex; align-items:center; justify-content:center; flex-direction:column; padding:1rem;">
+  <iframe id="gameFrame"
+          style="width:100%; max-width:650px; height:600px; border:4px solid {{ template.color }}; border-radius:16px; background:white;"
+          sandbox="allow-scripts allow-same-origin"
+          title="{{ template.name }}">
+  </iframe>
+  <p style="color:#5D9BEC; font-size:0.85rem; margin-top:0.8rem;">
+    💡 Tip: <strong style="color:#FFB347;">Remix in Editor</strong> to edit the code and make it your own!
+  </p>
+</div>
+
+<script>
+const html = {{ template.html_code | tojson }};
+const css  = {{ template.css_code  | tojson }};
+const js   = {{ template.js_code   | tojson }};
+
+function launchGame() {
+  const frame = document.getElementById('gameFrame');
+  const doc = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${css}</style></head><body>${html}<script>${js}<\/script></body></html>`;
+  frame.srcdoc = doc;
+}
+
+function reloadGame() { launchGame(); }
+
+launchGame();
+
+async function remixInEditor() {
+  {% if current_user.is_authenticated %}
+  sessionStorage.setItem('templateHtml', html);
+  sessionStorage.setItem('templateCss', css);
+  sessionStorage.setItem('templateJs', js);
+  sessionStorage.setItem('templateName', 'My {{ template.name }}');
+  window.location.href = "{{ url_for('play') }}";
+  {% else %}
+  if (confirm('You need to be logged in to remix games. Go to login?')) {
+    window.location.href = "{{ url_for('login') }}";
+  }
+  {% endif %}
+}
+</script>
+{% endblock %}

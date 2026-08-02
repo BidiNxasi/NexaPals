@@ -55,7 +55,16 @@
 
 <div class="cta">
     <h2><i>start coding today</i> 🚀</h2>
-    <button class="big-btn" id="startBtn"><i class="fa-regular fa-hand-peace"></i> become a pal</button>
-    <div class="free-badge"><i class="fas fa-gift" style="color: #9B7EDE;"></i> first month for free</div>
+    <p style="margin-bottom:1.5rem; opacity:0.9;">Join kids across South Africa already learning on Nexa Pals — completely free.</p>
+    <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin-bottom:1rem;">
+        <a href="{{ url_for('signup') }}" class="big-btn" style="text-decoration:none; font-size:1.1rem;">🚀 Sign Up Free</a>
+        <a href="{{ url_for('learn') }}" class="big-btn" style="text-decoration:none; font-size:1.1rem; background:#9B7EDE;">📚 Start Learning</a>
+    </div>
+    <p style="font-size:0.88rem; opacity:0.7; margin:0;">
+        Questions? Email us at
+        <a href="mailto:info@nexapals.co.za" style="color:#FFB347; font-weight:700;">info@nexapals.co.za</a>
+        &nbsp;·&nbsp;
+        <a href="{{ url_for('about') }}" style="color:#FFB347; font-weight:700;">About Nexa Pals</a>
+    </p>
 </div>
 {% endblock %}
