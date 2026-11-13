@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}{{ heading }}{% endblock %}
+{% block content %}
+<div style="max-width:880px;margin:1.5rem auto;padding:0 1.2rem;">
+  <p style="margin:0 0 .6rem;">{% if mode in ['intro','precode'] %}<a href="{{ url_for('learn') }}" style="color:#55688a;font-weight:700;text-decoration:none;">&larr; All lessons</a>{% else %}<a href="{{ url_for('my_skills') }}" style="color:#55688a;font-weight:700;text-decoration:none;">&larr; My skills</a>{% endif %}</p>
+  <h1 style="color:#1e3a5f;font-size:1.6rem;margin:.2rem 0;">{{ heading }}</h1>
+  <p style="color:#55688a;margin:0 0 1rem;">{{ sub }}</p>
+  {% if mission %}
+  <div id="missionRoot" aria-label="Interactive mission"></div>
+  {% if mode == 'precode' %}
+  <div id="precodeCta" style="display:none;background:#fff;border:3px solid #6c4bb8;border-radius:24px;padding:1.4rem 1.6rem;margin-top:1rem;text-align:center;">
+    <h2 style="margin:0 0 .3rem;color:#1e3a5f;">Ready to see real code?</h2>
+    <p style="color:#55688a;margin:0 0 1rem;">The blocks you used are written as words in real programs. Next you will change and write some yourself.</p>
+    <a class="big-btn green" href="{{ url_for('start_code') }}" style="text-decoration:none;"><i class="fas fa-code"></i> Next: my first real code</a>
+  </div>
+  <p style="text-align:center;margin-top:1rem;"><a href="{{ url_for('start_code') }}" style="color:#55688a;font-weight:700;">Already know a little code? Skip to real code</a></p>
+  {% endif %}
+  {% if mode == 'intro' %}
+  <div id="introCta" style="display:none;background:#fff;border:3px solid #6c4bb8;border-radius:24px;padding:1.4rem 1.6rem;margin-top:1rem;text-align:center;">
+    <h2 style="margin:0 0 .3rem;color:#1e3a5f;">What do you want to make first?</h2>
+    <p style="color:#55688a;margin:0 0 1rem;">HTML builds the page, CSS makes it beautiful, JavaScript makes it move. Most beginners start with HTML.</p>
+    <a class="big-btn green" href="{{ url_for('learn') if current_user.is_authenticated else url_for('signup') }}" style="text-decoration:none;"><i class="fas fa-rocket"></i> {{ 'Pick my first lesson' if current_user.is_authenticated else 'Create my free account' }}</a>
+  </div>
+  {% endif %}
+  {% else %}
+  <div style="background:#fff;border:3px dashed #c5d5e8;border-radius:24px;padding:2rem;text-align:center;color:#55688a;font-weight:700;">
+    <i class="fas fa-lock" style="font-size:1.8rem;display:block;margin-bottom:.5rem;"></i>{{ sub }}
+    <p style="margin:1rem 0 0;"><a class="big-btn" href="{{ url_for('learn') }}" style="text-decoration:none;">Back to lessons</a></p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+{% if mission %}
+<script src="{{ url_for('static', filename='js/mission.js') }}"></script>
+<script>
+const missionData = {{ mission | tojson }};
+const extra = {{ extra | tojson }};
+const mode = {{ mode | tojson }};
+const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+const authed = {{ 'true' if current_user.is_authenticated else 'false' }};
+function post(url, body) {
+  if (!authed) return Promise.resolve();
+  return fetch(url, {method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':csrf}, body: JSON.stringify(body)}).catch(function(){});
+}
+NexaMission.mount(document.getElementById('missionRoot'), missionData, {
+  lessonId: mode + '-' + (extra.track || missionData.skill || 'x') + '-' + Date.now(),
+  accent: {{ accent | tojson }},
+  level: mode === 'capstone' ? 6 : ((mode === 'intro' || mode === 'precode') ? 1 : 3),           // capstone and practice use the faded (hint-after-trying) setting
+  onStep: function (d) { post('/api/mission/step', {lesson_id: null, step: d.index, skill: d.skill, checks: d.checks, hints: d.hints, assisted: d.assisted, stuck: d.stuck}); },
+  onComplete: function (detail) {
+    if (mode === 'precode') { document.getElementById('precodeCta').style.display = 'block'; post('/api/learning/done', {kind:'precode'}); }
+    if (mode === 'intro') { document.getElementById('introCta').style.display = 'block'; post('/api/learning/done', {kind:'intro'}); }
+    if (mode === 'warmup') post('/api/learning/done', {kind:'warmup', track: extra.track, order: extra.order});
+    if (mode === 'capstone') post('/api/learning/done', {kind:'capstone', track: extra.track});
+  }
+});
+</script>
+{% endif %}
+{% endblock %}

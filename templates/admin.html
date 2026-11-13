@@ -5,7 +5,7 @@
 {% block content %}
 <div class="hero" style="padding: 2rem; background: linear-gradient(135deg, #1e5f4b, #0e3a2e); color: white;">
     <div class="hero-text" style="text-align: center;">
-        <h1 style="color: white;">🔧 <span style="background: #FFB347;">Admin Dashboard</span></h1>
+        <h1 style="color: white;"><i class="fas fa-gear"></i> <span style="background: #FFB347;">Admin Dashboard</span></h1>
         <p style="color: #f0f0f0;">Manage users, projects, and platform content</p>
     </div>
 </div>
@@ -30,8 +30,55 @@
             <p style="color: #4a627a; font-weight: 500;">Lessons Available</p>
         </div>
     </div>
-    
-    <!-- Users Table -->
+
+    <!-- Analytics -->
+    <div style="background: white; border-radius: 32px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <h3 style="color: #1e5f4b; margin-top:0;"><i class="fas fa-chart-line"></i> Retention &amp; Growth (self-hosted — swap for real analytics once you have API keys)</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.2rem;">
+            <div style="text-align:center;padding:0.8rem;background:#f0f5ff;border-radius:16px;">
+                <div style="font-size:1.6rem;font-weight:800;color:#1e5f4b;">{{ analytics.signups_today }}</div>
+                <div style="font-size:0.8rem;color:#6c757d;">Signups today</div>
+            </div>
+            <div style="text-align:center;padding:0.8rem;background:#f0f5ff;border-radius:16px;">
+                <div style="font-size:1.6rem;font-weight:800;color:#1e5f4b;">{{ analytics.signups_week }}</div>
+                <div style="font-size:0.8rem;color:#6c757d;">Signups this week</div>
+            </div>
+            <div style="text-align:center;padding:0.8rem;background:#f0f5ff;border-radius:16px;">
+                <div style="font-size:1.6rem;font-weight:800;color:#1e5f4b;">{{ analytics.active_today }}</div>
+                <div style="font-size:0.8rem;color:#6c757d;">Active today</div>
+            </div>
+            <div style="text-align:center;padding:0.8rem;background:#fff3e0;border-radius:16px;">
+                <div style="font-size:1.6rem;font-weight:800;color:#C17D2E;">
+                    {% if analytics.d7_retention_pct is not none %}{{ analytics.d7_retention_pct }}%{% else %}—{% endif %}
+                </div>
+                <div style="font-size:0.8rem;color:#6c757d;">D7 retention ({{ analytics.d7_cohort_size }} in cohort)</div>
+            </div>
+        </div>
+        <div style="font-size:0.85rem;color:#6c757d;margin-bottom:0.4rem;font-weight:700;">Events, last 7 days</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+            {% for name, count in analytics.events_this_week.items() %}
+            <span style="background:#e9ecef;border-radius:20px;padding:0.3rem 0.8rem;font-size:0.8rem;color:#1e3a5f;"><strong>{{ count }}</strong> {{ name }}</span>
+            {% else %}
+            <span style="color:#6c757d;font-size:0.85rem;">No events logged yet this week.</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if recent_errors %}
+    <div style="background: white; border-radius: 32px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <h3 style="color: #C0392B; margin-top:0;"><i class="fas fa-triangle-exclamation"></i> Recent Errors</h3>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;max-height:300px;overflow-y:auto;">
+            {% for err in recent_errors %}
+            <div style="background:#fdf0f0;border-radius:12px;padding:0.6rem 0.9rem;font-size:0.82rem;">
+                <div style="color:#6c757d;">{{ err.created_at.strftime('%Y-%m-%d %H:%M') }} — <code>{{ err.path }}</code></div>
+                <div style="color:#721c24;font-family:monospace;">{{ err.message[:200] }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+
     <div style="background: white; border-radius: 32px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
         <h2 style="color: #1e5f4b; margin-bottom: 1rem;"><i class="fas fa-users"></i> All Users</h2>
         <div style="overflow-x: auto;">
@@ -106,13 +153,25 @@
     </div>
     
     <!-- Quick Actions -->
-    <div style="background: #f0f5ff; border-radius: 32px; padding: 1.5rem; text-align: center; margin-bottom:2rem;">
-        <h3><i class="fas fa-book-open"></i> Lessons ({{ lessons|length }} total)</h3>
-        <div style="display:flex; flex-wrap:wrap; gap:0.8rem; justify-content:center; margin-top:1rem;">
+    <div style="background: #f0f5ff; border-radius: 32px; padding: 1.5rem; margin-bottom:2rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.8rem;margin-bottom:1rem;">
+            <h3 style="margin:0;"><i class="fas fa-book-open"></i> Lessons ({{ lessons|length }} total)</h3>
+            <a href="{{ url_for('admin_lesson_new') }}" class="btn btn-yellow" style="text-decoration:none;font-size:0.85rem;padding:0.5rem 1rem;"><i class="fas fa-plus"></i> New Lesson</a>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:0.5rem;">
         {% for lesson in lessons %}
-        <span style="background:{% if lesson.track=='html' %}#5D9BEC{% elif lesson.track=='css' %}#FFB347{% else %}#9B7EDE{% endif %}; color:white; padding:0.3rem 0.9rem; border-radius:20px; font-size:0.8rem; font-weight:600;">
-            {{ lesson.track|upper }} {{ lesson.order }}: {{ lesson.title }}
-        </span>
+        <div style="display:flex;align-items:center;gap:0.7rem;background:white;border-radius:14px;padding:0.5rem 0.8rem;">
+            <span style="background:{% if lesson.track=='html' %}#5D9BEC{% elif lesson.track=='css' %}#FFB347{% else %}#9B7EDE{% endif %}; color:white; padding:0.3rem 0.9rem; border-radius:20px; font-size:0.8rem; font-weight:600; white-space:nowrap;">
+                {{ lesson.track|upper }} {{ lesson.order }}
+            </span>
+            <span style="flex:1;color:#1e3a5f;font-weight:600;font-size:0.9rem;">{{ lesson.title }}</span>
+            {% if lesson.practice_json %}<i class="fas fa-flask" title="Has a live-practice challenge" style="color:#1e5f4b;"></i>{% endif %}
+            <a href="{{ url_for('admin_lesson_edit', lesson_id=lesson.id) }}" style="color:#5D9BEC;font-size:0.85rem;text-decoration:none;font-weight:600;"><i class="fas fa-pen"></i> Edit</a>
+            <form method="POST" action="{{ url_for('admin_lesson_delete', lesson_id=lesson.id) }}" onsubmit="return confirm('Delete this lesson? This cannot be undone.');" style="margin:0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" style="background:none;border:none;color:#e25c5c;font-size:0.85rem;cursor:pointer;font-weight:600;font-family:inherit;"><i class="fas fa-trash"></i></button>
+            </form>
+        </div>
         {% endfor %}
         </div>
     </div>
@@ -120,7 +179,7 @@
     <!-- AI Quiz Generator -->
     <div style="background:white; border:4px solid #9B7EDE; border-radius:32px; padding:1.5rem; margin-bottom:2rem;">
         <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:1rem;">
-            <span style="font-size:1.8rem;">🤖</span>
+            <span style="font-size:1.6rem;color:#9B7EDE;"><i class="fas fa-robot"></i></span>
             <div>
                 <h3 style="margin:0; color:#6B4F9E;">AI Quiz Generator</h3>
                 <p style="margin:0; font-size:0.85rem; color:#6c757d;">Generate multiple-choice questions and copy the JSON straight into any lesson's quiz_json field.</p>
@@ -142,7 +201,7 @@
             </select>
             <button id="quizGenBtn" onclick="generateQuiz()"
                     style="background:#9B7EDE; color:white; border:none; border-bottom:4px solid #6B4F9E; border-radius:30px; padding:0.6rem 1.2rem; font-weight:700; cursor:pointer;">
-                Generate ✨
+                <i class="fas fa-wand-magic-sparkles"></i> Generate
             </button>
         </div>
         <div id="quizGenStatus" style="display:none; font-size:0.85rem; color:#6B4F9E; font-style:italic; margin-bottom:0.8rem;"></div>
@@ -151,12 +210,12 @@
                 <strong style="color:#1e3a5f;">Generated Questions:</strong>
                 <button onclick="copyQuizJson()"
                         style="background:#1e5f4b; color:white; border:none; border-radius:20px; padding:0.4rem 1rem; font-size:0.85rem; cursor:pointer; font-weight:600;">
-                    📋 Copy JSON
+                    <i class="fas fa-clipboard"></i> Copy JSON
                 </button>
             </div>
             <div id="quizPreview" style="display:flex; flex-direction:column; gap:0.7rem; margin-bottom:0.8rem;"></div>
             <details>
-                <summary style="cursor:pointer; color:#6B4F9E; font-weight:600; font-size:0.85rem;">▶ Show raw JSON (paste into quiz_json field)</summary>
+                <summary style="cursor:pointer; color:#6B4F9E; font-weight:600; font-size:0.85rem;">Show raw JSON (paste into quiz_json field)</summary>
                 <pre id="quizJsonRaw" style="background:#1e2a3e; color:#FFB347; border-radius:12px; padding:1rem; font-size:0.78rem; overflow-x:auto; white-space:pre-wrap; margin-top:0.5rem;"></pre>
             </details>
         </div>
@@ -179,9 +238,9 @@ async function generateQuiz() {
     const result = document.getElementById('quizGenResult');
     if (!topic) { document.getElementById('quizTopic').focus(); return; }
 
-    btn.disabled = true; btn.textContent = '⏳ Generating…';
+    btn.disabled = true; btn.textContent = 'Generating…';
     status.style.display = 'block';
-    status.textContent = `🤖 Writing ${count} ${track.toUpperCase()} questions about "${topic}"…`;
+    status.textContent = `Writing ${count} ${track.toUpperCase()} questions about "${topic}"...`;
     result.style.display = 'none';
 
     const meta = document.querySelector('meta[name="csrf-token"]');
@@ -195,16 +254,16 @@ async function generateQuiz() {
         if (data.success) {
             renderQuizPreview(data.questions);
             document.getElementById('quizJsonRaw').textContent = JSON.stringify(data.questions, null, 2);
-            status.textContent = `✅ ${data.questions.length} questions generated! Review them below, then copy the JSON.`;
+            status.textContent = `${data.questions.length} questions generated. Review them below, then copy the JSON.`;
             result.style.display = 'block';
             window._generatedQuiz = data.questions;
         } else {
-            status.textContent = '❌ ' + data.message;
+            status.textContent = data.message;
         }
     } catch(e) {
-        status.textContent = '❌ Network error. Please try again.';
+        status.textContent = 'Network error. Please try again.';
     }
-    btn.disabled = false; btn.textContent = 'Generate ✨';
+    btn.disabled = false; btn.textContent = 'Generate';
 }
 
 function renderQuizPreview(questions) {
@@ -214,7 +273,7 @@ function renderQuizPreview(questions) {
         const div = document.createElement('div');
         div.style.cssText = 'background:#f8f9ff; border-radius:14px; padding:1rem; border-left:4px solid #9B7EDE;';
         div.innerHTML = `<strong style="color:#1e3a5f">${i+1}. ${q.q}</strong><ol style="margin:0.5rem 0 0; padding-left:1.2rem;">` +
-            q.options.map((o,j) => `<li style="${j===q.answer ? 'color:#1e5f4b; font-weight:700;' : 'color:#4a627a;'}">${o}${j===q.answer?' ✅':''}</li>`).join('') +
+            q.options.map((o,j) => `<li style="${j===q.answer ? 'color:#1e5f4b; font-weight:700;' : 'color:#4a627a;'}">${o}${j===q.answer?' (correct)':''}</li>`).join('') +
             '</ol>';
         preview.appendChild(div);
     });
@@ -223,7 +282,7 @@ function renderQuizPreview(questions) {
 function copyQuizJson() {
     if (!window._generatedQuiz) return;
     navigator.clipboard.writeText(JSON.stringify(window._generatedQuiz))
-        .then(() => alert('✅ JSON copied to clipboard! Paste it into the quiz_json field in your database editor.'))
+        .then(() => alert('JSON copied to clipboard. Paste it into the quiz_json field in your database editor.'))
         .catch(() => { document.getElementById('quizJsonRaw').style.display='block'; alert('Select and copy the JSON from the box below.'); });
 }
 
@@ -239,10 +298,10 @@ async function adminDeleteUser(userId) {
         if (data.success) {
             document.getElementById(`user-row-${userId}`)?.remove();
         } else {
-            alert('❌ ' + (data.message || 'Error deleting user'));
+            alert(data.message || 'Error deleting user');
         }
     } catch (e) {
-        alert('❌ Network error. Please try again.');
+        alert('Network error. Please try again.');
     }
 }
 
@@ -258,10 +317,10 @@ async function adminDeleteProject(projectId) {
         if (data.success) {
             document.getElementById(`project-row-${projectId}`)?.remove();
         } else {
-            alert('❌ ' + (data.message || 'Error deleting project'));
+            alert(data.message || 'Error deleting project');
         }
     } catch (e) {
-        alert('❌ Network error. Please try again.');
+        alert('Network error. Please try again.');
     }
 }
 </script>

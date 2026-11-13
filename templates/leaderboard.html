@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}Ranks{% endblock %}
+{% block content %}
+
+<section class="journey-header" style="padding-bottom:2rem;">
+  <div class="journey-header-inner" style="flex-direction:column;align-items:center;text-align:center;">
+    <div class="journey-intro" style="text-align:center;">
+      <span class="section-label" style="justify-content:center;display:inline-flex;"><i class="fas fa-trophy"></i> Community</span>
+      <h1>This Week's Coders</h1>
+      <p style="max-width:420px;margin:0.4rem auto 0;">Keep building — every project and lesson counts. Climb together.</p>
+    </div>
+    {% if current_user.is_authenticated %}
+    <div class="journey-progress-card" style="margin-top:1.2rem;min-width:auto;">
+      <div style="display:flex;align-items:center;gap:1rem;justify-content:center;flex-wrap:wrap;">
+        <span style="color:var(--yellow);font-weight:700;"><i class="fas {{ current_user.avatar }}"></i> {{ current_user.username }}</span>
+        <span style="color:var(--mist);">{{ current_user.xp }} XP</span>
+        <span style="color:var(--mist);">You're here</span>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{% set league_colors = {'bronze':'#C17D2E','silver':'#9AA5B1','gold':'#FFB347','diamond':'#5DC9C9'} %}
+
+<div style="max-width:700px;margin:1.5rem auto 0;padding:0 1rem;">
+  <div style="display:flex;gap:0.5rem;justify-content:center;margin-bottom:1.5rem;">
+    <button class="tab-btn active" data-tab="league" onclick="showLbTab('league',this)">This Week</button>
+    <button class="tab-btn" data-tab="alltime" onclick="showLbTab('alltime',this)">All-Time</button>
+  </div>
+</div>
+
+<div id="lbTab-league" style="max-width:700px;margin:0 auto;padding:0 1rem 3rem;">
+  <div style="text-align:center;margin-bottom:1.4rem;">
+    <span style="display:inline-flex;align-items:center;gap:0.4rem;background:{{ league_colors[my_league] }}22;color:{{ league_colors[my_league] }};font-weight:800;padding:0.4rem 1.1rem;border-radius:30px;text-transform:capitalize;">
+      <i class="fas fa-shield"></i> {{ my_league }} League
+    </span>
+    <p style="color:var(--smoke);font-size:0.88rem;margin-top:0.7rem;max-width:400px;margin-left:auto;margin-right:auto;">
+      {% if promote_xp %}
+        Earn {{ promote_xp }} XP this week to move up. A quiet week just means you stay ready for next week.
+      {% else %}
+        You've reached Diamond — the top league. Keep shipping and help others climb.
+      {% endif %}
+    </p>
+  </div>
+
+  {% for user in league_users %}
+  {% set pos = loop.index %}
+  <div class="lb-row {% if current_user.is_authenticated and user.id == current_user.id %}you{% endif %}"
+       style="border-color:{% if pos==1 %}#FFB347{% elif pos==2 %}#c5d5e8{% elif pos==3 %}#C17D2E{% else %}#e9ecef{% endif %};">
+    <div class="lb-pos">{{ pos }}</div>
+    <div class="lb-avatar"><i class="fas {{ user.avatar }}"></i></div>
+    <div class="lb-name">
+      {{ user.username }}
+      {% if current_user.is_authenticated and user.id == current_user.id %}
+      <span class="lb-you-tag">You</span>
+      {% endif %}
+    </div>
+    <div class="lb-xp">
+      <strong>{{ user.weekly_xp }}</strong>
+      <span>XP this week</span>
+    </div>
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:2.5rem;color:var(--smoke);">
+    Nobody's earned XP in the {{ my_league }} league yet this week — be the first!
+  </div>
+  {% endfor %}
+
+  <div class="encourage-banner" style="padding:2rem 0 0;background:transparent;">
+    <div class="encourage-inner">
+      <img src="{{ url_for('static', filename='images/mascot_icon.png') }}" alt="" class="encourage-mascot">
+      <div>
+        <strong>Keep building — every project counts.</strong>
+        <p>Ranks reset weekly. Focus on learning and the climb will follow.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="lbTab-alltime" style="display:none;max-width:700px;margin:0 auto;padding:0 1rem 3rem;">
+  {% for user in users %}
+  {% set pos = loop.index %}
+  <div class="lb-row {% if current_user.is_authenticated and user.id == current_user.id %}you{% endif %}"
+       style="border-color:{% if pos==1 %}#FFB347{% elif pos==2 %}#c5d5e8{% elif pos==3 %}#C17D2E{% else %}#e9ecef{% endif %};">
+    <div class="lb-pos">{{ pos }}</div>
+    <div class="lb-avatar"><i class="fas {{ user.avatar }}"></i></div>
+    <div class="lb-name">
+      {{ user.username }}
+      {% if current_user.is_authenticated and user.id == current_user.id %}
+      <span class="lb-you-tag">You</span>
+      {% endif %}
+    </div>
+    <div class="lb-xp">
+      <strong>{{ user.xp }}</strong>
+      <span>total XP</span>
+    </div>
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:2.5rem;color:var(--smoke);">No coders yet — be the first!</div>
+  {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showLbTab(tab, btn) {
+  document.getElementById('lbTab-league').style.display = tab === 'league' ? 'block' : 'none';
+  document.getElementById('lbTab-alltime').style.display = tab === 'alltime' ? 'block' : 'none';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+</script>
+<style>
+.lb-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: white;
+  border-radius: 16px;
+  padding: 0.95rem 1.2rem;
+  margin-bottom: 0.65rem;
+  border: 2px solid #e9ecef;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.lb-row:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.lb-row.you { background: #f8faff; border-color: var(--blue); }
+.lb-pos { width: 28px; text-align: center; font-weight: 800; color: var(--smoke); font-size: 0.95rem; }
+.lb-avatar { font-size: 1.3rem; color: var(--blue); width: 1.6em; text-align: center; }
+.lb-name { flex: 1; font-weight: 700; color: var(--ink); font-size: 0.95rem; }
+.lb-you-tag {
+  background: var(--blue);
+  color: white;
+  font-size: 0.68rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 20px;
+  margin-left: 0.35rem;
+  font-weight: 700;
+}
+.lb-xp { text-align: right; }
+.lb-xp strong { display: block; font-size: 1.1rem; font-weight: 800; color: var(--yellow-d); }
+.lb-xp span { font-size: 0.7rem; color: var(--smoke); }
+.tab-btn {
+  background: var(--fog);
+  border: none;
+  padding: 0.55rem 1.3rem;
+  border-radius: var(--r-pill);
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  font-family: var(--font);
+  color: var(--smoke);
+  transition: all 0.15s;
+}
+.tab-btn.active {
+  background: var(--navy);
+  color: var(--white);
+}
+</style>
+{% endblock %}

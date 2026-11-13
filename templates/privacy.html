@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy{% endblock %}
+
+{% block content %}
+<div style="max-width:760px;margin:2.5rem auto;padding:0 1.5rem;">
+  <h1 style="color:#1e3a5f;">Privacy Policy</h1>
+  <p style="color:#6c757d;font-size:0.9rem;">Last updated: {{ policy_updated_date if policy_updated_date else '2026' }}</p>
+
+  <div style="background:#fff3e0;border:2px solid #FFB347;border-radius:16px;padding:1rem 1.2rem;margin-bottom:2rem;font-size:0.88rem;color:#6c4a1a;">
+    <i class="fas fa-triangle-exclamation"></i> This policy is written in plain language so parents and kids can
+    actually read it. It has not been reviewed by a lawyer — if you're relying on this for a real launch,
+    have it checked against South Africa's Protection of Personal Information Act (POPIA) before you rely on it.
+  </div>
+
+  <h2>What we collect</h2>
+  <ul>
+    <li><strong>Account info:</strong> your username, email address, and password (we only ever store a scrambled/hashed version of your password — we can't see it).</li>
+    <li><strong>If you're under 18:</strong> a parent or guardian's email address, so they can be told about the account.</li>
+    <li><strong>What you build:</strong> the code you write and save in the Playground, your lesson progress, quiz scores, XP, badges, and streaks.</li>
+    <li><strong>Questions you ask the AI tutor:</strong> the text of your questions and the lesson you're on, so the tutor can give a relevant answer.</li>
+    <li><strong>Basic technical info:</strong> your IP address, used only to prevent spam signups and abuse of the AI tutor.</li>
+  </ul>
+  <p>We do not collect your real name, address, phone number, or any payment information — Nexa Pals is free and we don't ask for any of that.</p>
+
+  <h2>How we use it</h2>
+  <ul>
+    <li>To run your account, save your progress, and show you the leaderboard and badges.</li>
+    <li>To send your question to an AI provider (see "Third parties" below) and show you the reply.</li>
+    <li>To stop bots and abuse (rate limits on signups and AI requests).</li>
+    <li>We do <strong>not</strong> sell your data, and we do <strong>not</strong> use it for advertising — Nexa Pals has no ads.</li>
+  </ul>
+
+  <h2>Third parties</h2>
+  <p>
+    When you ask the AI tutor a question, or use "Explain this code" or "Generate a project," your question and
+    the relevant lesson context are sent to our AI provider, <strong>Groq</strong>, to generate a reply. Groq does
+    not retain the content of these requests for training. Nexa Pals does not share your username, email, or any
+    other account details with them — only the text of the question itself. We do not use Google Gemini for
+    accounts belonging to anyone under 18, in line with Gemini's own terms of service.
+  </p>
+  <p>If you use the contact form, your message is sent to our support inbox via email (Gmail SMTP) so we can reply.</p>
+
+  <h2>Children's privacy &amp; parental consent</h2>
+  <p>
+    Nexa Pals is built for learners aged 10 and up, including children under 18. If you tell us you're under 18
+    when you sign up, we ask for a parent or guardian's email address and send them a message so they know the
+    account exists and can ask us to review or remove it at any time. <strong>AI features (the tutor, code
+    helper, and project generator) stay switched off for that account until a parent verifies the email we
+    sent</strong> — so an AI conversation with your child never starts without a parent knowing about it first.
+  </p>
+  <p>
+    A parent or guardian can email us at <strong>{{ contact_email if contact_email else 'info@nexapals.co.za' }}</strong>
+    at any time to see what information we hold about their child, correct it, or have it deleted.
+  </p>
+
+  <h2>How long we keep your data</h2>
+  <p>We keep your account and progress for as long as your account exists. If you ask us to delete your account, we'll delete your personal information within a reasonable time, except where we need to keep something for a legal reason.</p>
+
+  <h2>Your rights</h2>
+  <p>You (or your parent/guardian, if you're under 18) can ask us at any time to:</p>
+  <ul>
+    <li>See what information we have about you</li>
+    <li>Correct anything that's wrong</li>
+    <li>Delete your account and personal information</li>
+  </ul>
+  <p>Email <strong>{{ contact_email if contact_email else 'info@nexapals.co.za' }}</strong> or use the <a href="{{ url_for('contact') }}">contact form</a> for any of these.</p>
+
+  <h2>Cookies</h2>
+  <p>We use one essential cookie to keep you logged in. We don't use tracking or advertising cookies.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>If we make a meaningful change to this policy, we'll update the date at the top of this page.</p>
+
+  <h2>Contact us</h2>
+  <p>Questions about privacy? Email <strong>{{ contact_email if contact_email else 'info@nexapals.co.za' }}</strong> or use our <a href="{{ url_for('contact') }}">contact page</a>.</p>
+</div>
+{% endblock %}

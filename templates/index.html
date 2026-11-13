@@ -1,70 +1,300 @@
 {% extends "base.html" %}
-
-{% block title %}Home{% endblock %}
+{% block title %}Learn to Code for Free{% endblock %}
 
 {% block content %}
-<div class="hero">
-    <div class="hero-text">
-        <h1>Hey! <span>Nexa Pals</span> is here! 👋</h1>
-        <p><i class="fas fa-rocket" style="color: #FFB347;"></i> Make games, tell stories, code with friends!</p>
-        <div class="project-counter" id="projectCounter">
-            <i class="fa-regular fa-star"></i> <span id="countNumber">150</span>+ projects
+
+<!-- ══ HERO ═══════════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-text fade-slide-up">
+    <div class="hero-pill">Built for South African kids — 100% Free</div>
+    <h1>
+      Learn to <span class="accent-yellow">Code</span>.<br>
+      Build Real <span class="accent-yellow">Things</span>.<br>
+      <span class="accent-purple">Grow With Every Lesson.</span>
+    </h1>
+    <p>A clear coding journey, live games, an AI tutor, and a playground — free, designed for kids 10+ in South Africa.</p>
+    <div class="hero-actions">
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('learn') }}" class="btn btn-xl btn-yellow"><i class="fas fa-book-open"></i> Continue Learning</a>
+        <a href="{{ url_for('play') }}"  class="btn btn-xl btn-purple"><i class="fas fa-bolt"></i> Open Playground</a>
+      {% else %}
+        <a href="{{ url_for('signup') }}" class="btn btn-xl btn-yellow"><i class="fas fa-rocket"></i> Start for Free</a>
+        <a href="{{ url_for('start_here') }}" class="btn btn-xl" style="background:#fff;color:#1e3a5f;"><i class="fas fa-seedling"></i> Try coding in 5 minutes</a>
+        <a href="{{ url_for('learn') }}"  class="btn btn-xl btn-ghost" style="color:var(--white);border-color:rgba(255,255,255,0.25);">Browse Lessons</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Mascot buddy -->
+  <img src="{{ url_for('static', filename='images/mascot_full.png') }}" alt="Nexa, the Nexa Pals coding buddy" class="hero-mascot">
+
+  <!-- Floating stats card -->
+  <div class="hero-card">
+    {% if current_user.is_authenticated %}
+      <div style="text-align:center;margin-bottom:1.2rem;">
+        <div style="font-size:2.5rem;line-height:1;margin-bottom:0.5rem;color:var(--yellow);"><i class="fas {{ current_user.avatar }}"></i></div>
+        <div style="color:var(--white);font-weight:800;font-size:1.05rem;">{{ current_user.username }}</div>
+        <div style="color:var(--yellow);font-size:0.82rem;font-weight:700;margin-top:0.2rem;">{{ current_user.level.name }} — Level {{ current_user.level.num }}</div>
+        <div class="prog-bar-wrap" style="margin:0.8rem 0 0.3rem;">
+          <div class="prog-bar-fill" style="width:{{ current_user.level_progress_pct }}%;"></div>
         </div>
+        <div style="color:var(--mist);font-size:0.78rem;">{{ current_user.xp }} XP earned</div>
+      </div>
+    {% else %}
+      <div style="text-align:center;margin-bottom:1.2rem;">
+        <div style="font-size:2.5rem;margin-bottom:0.5rem;color:var(--purple);"><i class="fas fa-gamepad"></i></div>
+        <div style="color:var(--white);font-weight:700;font-size:0.95rem;">Your stats appear here</div>
+        <div style="color:var(--mist);font-size:0.8rem;margin-top:0.3rem;">Sign up to track progress</div>
+      </div>
+    {% endif %}
+    {% for icon, label, val, color in [
+      ('fa-book-open',   'Lessons',   '15 free',    'var(--blue)'),
+      ('fa-gamepad',     'Games',     '6 arcade',   'var(--purple)'),
+      ('fa-robot',       'AI Tutor',  'always on',  'var(--yellow)'),
+      ('fa-bolt',        'XP System', 'earn & rank','var(--green-l)'),
+    ] %}
+    <div class="hero-stat-row">
+      <span><i class="fas {{ icon }}" style="width:1.1em;display:inline-block;"></i> {{ label }}</span>
+      <span style="color:{{ color }};">{{ val }}</span>
     </div>
-    <div class="hero-avatar" id="buddyAvatar">
-        <i class="fas fa-smile-wink"></i>
-    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ══ STAT BAR ════════════════════════════════════════════════════ -->
+<div class="stat-bar">
+  <div class="stat-bar-inner">
+    {% for num, label in [('15','Lessons'),('6','Arcade Games'),('5','AI Features'),('10','Levels'),('∞','XP to Earn')] %}
+    <div class="stat-item"><strong>{{ num }}</strong><span>{{ label }}</span></div>
+    {% endfor %}
+  </div>
 </div>
 
-<div class="features">
-    <h2 class="section-title"><span>⚡ super powers ⚡</span></h2>
-    <div class="feature-grid">
-        <div class="feature-card"><i class="fas fa-puzzle-piece"></i><h3>blocks</h3><p>snap & create</p></div>
-        <div class="feature-card"><i class="fas fa-gamepad"></i><h3>games</h3><p>build & play</p></div>
-        <div class="feature-card"><i class="fas fa-paint-brush"></i><h3>art</h3><p>draw & code</p></div>
-        <div class="feature-card"><i class="fas fa-medal"></i><h3>badges</h3><p>earn rewards</p></div>
+{% if not current_user.is_authenticated %}
+<!-- ══ TRY IT NOW ══════════════════════════════════════════════════ -->
+<section class="section-sm section-light">
+  <div class="container-sm" style="max-width:900px;">
+    <div style="text-align:center;margin-bottom:1.2rem;">
+      <span class="section-label"><i class="fas fa-code"></i> Try It Right Now — No Sign-Up Needed</span>
+      <h2 style="margin-top:0.6rem;color:#1e3a5f;">Change the code, hit Run, watch it happen.</h2>
     </div>
-</div>
-
-<div class="projects">
-    <h2 class="section-title"><span>✨ awesome projects ✨</span></h2>
-    <div class="project-grid" id="projectGrid">
-        {% for template in templates %}
-        <div class="project-card" data-template-id="{{ template.id }}">
-            <i class="fas {{ template.icon }}"></i>
-            <h4>{{ template.name }}</h4>
-            <p>{{ template.description }}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;background:#1e2a3e;border-radius:20px;padding:1.2rem;" id="tryItGrid">
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+          <span style="font-size:0.75rem;font-weight:700;color:#c5d5e8;text-transform:uppercase;letter-spacing:0.04em;">HTML</span>
+          <button onclick="tryItRun()" class="btn btn-yellow" style="font-size:0.8rem;padding:0.4rem 1rem;"><i class="fas fa-play"></i> Run</button>
         </div>
-        {% endfor %}
-    </div>
-    <div class="project-counter" id="clickCounter"><i class="fas fa-mouse-pointer"></i> click me!</div>
-</div>
+        <textarea id="tryItCode" spellcheck="false" rows="9"
+          style="width:100%;font-family:monospace;font-size:0.85rem;padding:0.8rem;border-radius:12px;border:none;resize:vertical;box-sizing:border-box;background:#0f1a2e;color:#c5d5e8;">&lt;h1 id="greeting"&gt;Hello, coder!&lt;/h1&gt;
+&lt;button onclick="wave()"&gt;Click me&lt;/button&gt;
 
-<div class="squad">
-    <h2 class="section-title"><span>🌟 pal squad 🌟</span></h2>
-    <div class="squad-grid">
-        <div class="buddy-card"><i class="fas fa-robot"></i><h3>Karabo</h3><p>python pro</p></div>
-        <div class="buddy-card"><i class="fas fa-heart"></i><h3>Thabiso</h3><p>game master</p></div>
-        <div class="buddy-card"><i class="fas fa-paint-brush"></i><h3>Relebohile</h3><p>art wizard</p></div>
+&lt;script&gt;
+function wave() {
+  document.getElementById('greeting').textContent = "You're coding right now!";
+  document.getElementById('greeting').style.color = "#9B7EDE";
+}
+&lt;/script&gt;</textarea>
+      </div>
+      <div>
+        <div style="font-size:0.75rem;font-weight:700;color:#c5d5e8;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.4rem;">Preview</div>
+        <iframe id="tryItPreview" sandbox="allow-scripts" style="width:100%;height:calc(100% - 22px);min-height:200px;border:none;border-radius:12px;background:white;"></iframe>
+      </div>
     </div>
-    <div class="testimonial" id="testimonialBox">
-        <i class="fas fa-quote-left" style="color: #9B7EDE;"></i>
-        <span id="testimonialText">I made my first game in less than 2 hours!</span><br>--- <span id="testimonialAuthor">Mia, 10</span>
-    </div>
-</div>
-
-<div class="cta">
-    <h2><i>start coding today</i> 🚀</h2>
-    <p style="margin-bottom:1.5rem; opacity:0.9;">Join kids across South Africa already learning on Nexa Pals — completely free.</p>
-    <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin-bottom:1rem;">
-        <a href="{{ url_for('signup') }}" class="big-btn" style="text-decoration:none; font-size:1.1rem;">🚀 Sign Up Free</a>
-        <a href="{{ url_for('learn') }}" class="big-btn" style="text-decoration:none; font-size:1.1rem; background:#9B7EDE;">📚 Start Learning</a>
-    </div>
-    <p style="font-size:0.88rem; opacity:0.7; margin:0;">
-        Questions? Email us at
-        <a href="mailto:info@nexapals.co.za" style="color:#FFB347; font-weight:700;">info@nexapals.co.za</a>
-        &nbsp;·&nbsp;
-        <a href="{{ url_for('about') }}" style="color:#FFB347; font-weight:700;">About Nexa Pals</a>
+    <p style="text-align:center;color:#6c757d;font-size:0.88rem;margin-top:1rem;">
+      Like it? <a href="{{ url_for('signup') }}" style="color:var(--purple);font-weight:700;">Sign up free</a> to save your projects, earn XP, and get the full curriculum.
     </p>
-</div>
+  </div>
+</section>
+<script>
+function tryItRun() {
+  const code = document.getElementById('tryItCode').value;
+  const preview = document.getElementById('tryItPreview');
+  preview.srcdoc = code;
+  window.NexaSound?.click();
+}
+document.addEventListener('DOMContentLoaded', tryItRun);
+</script>
+{% endif %}
+
+<!-- ══ DAILY CHALLENGE ════════════════════════════════════════════ -->
+{% if daily %}
+<section class="section-sm section-fog">
+  <div class="container-sm">
+    <div style="text-align:center;margin-bottom:1rem;">
+      <span class="section-label"><i class="fas fa-bolt"></i> Today's Challenge</span>
+    </div>
+    <a href="{{ url_for('play') }}" class="daily-card" style="text-decoration:none;">
+      <div class="daily-icon"><i class="fas fa-palette"></i></div>
+      <div style="flex:1;">
+        <h3>{{ daily.title }}</h3>
+        <p>{{ daily.description }}</p>
+        <span style="display:inline-block;background:rgba(255,255,255,0.2);color:white;border-radius:var(--r-pill);padding:0.2rem 0.8rem;font-size:0.8rem;font-weight:700;">+{{ daily.xp_reward }} XP reward</span>
+      </div>
+      <span style="color:rgba(255,255,255,0.4);font-size:1.5rem;flex-shrink:0;">→</span>
+    </a>
+  </div>
+</section>
+{% endif %}
+
+<!-- ══ TRACKS ══════════════════════════════════════════════════════ -->
+<section class="section section-light">
+  <div class="container">
+    <div class="ta-center mb-lg">
+      <span class="section-label"><i class="fas fa-map"></i> Learning Paths</span>
+      <h2 class="section-title dark">Choose Your Track</h2>
+      <p class="section-sub dark">Three tracks, 15 lessons — start anywhere, go at your own pace</p>
+    </div>
+    <div class="grid-3">
+      {% for icon, name, desc, color, icon_bg, track_id in [
+        ('fa-drafting-compass','HTML',       'Build the structure of every webpage — tags, elements, links, forms',       'var(--blue)',   'rgba(93,155,236,0.1)',   'html'),
+        ('fa-palette',         'CSS',        'Make your pages look beautiful — colours, fonts, layouts, animations',      'var(--yellow)', 'rgba(255,179,71,0.1)',   'css'),
+        ('fa-bolt',            'JavaScript', 'Bring pages to life — events, logic, games, DOM manipulation and more',    'var(--purple)', 'rgba(155,126,222,0.1)', 'javascript'),
+      ] %}
+      <a href="{{ url_for('learn') }}#{{ track_id }}" class="track-card">
+        <div class="track-icon" style="background:{{ icon_bg }};color:{{ color }};"><i class="fas {{ icon }}"></i></div>
+        <h3 style="color:var(--navy);margin-bottom:0.4rem;">{{ name }}</h3>
+        <p style="font-size:0.88rem;color:var(--smoke);line-height:1.55;margin-bottom:1rem;">{{ desc }}</p>
+        <span style="display:inline-flex;align-items:center;gap:0.3rem;font-size:0.82rem;font-weight:700;color:{{ color }};">Start track →</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ══ FEATURES ════════════════════════════════════════════════════ -->
+<section class="section section-fog">
+  <div class="container">
+    <div class="ta-center mb-lg">
+      <span class="section-label" style="color:var(--purple);"><i class="fas fa-rocket"></i> Platform Features</span>
+      <h2 class="section-title dark">Everything You Need</h2>
+      <p class="section-sub dark">Built from the ground up for kids — not just a re-skinned adult platform</p>
+    </div>
+    <div class="grid-3">
+      {% for icon, name, desc, color, icon_bg, link in [
+        ('fa-book-open',   'Step-by-Step Lessons',  '15 real lessons with examples, code you can run, and a quiz to earn XP',             'var(--blue)',   'rgba(93,155,236,0.1)',   url_for('learn')),
+        ('fa-gamepad',     'Arcade Games',           'Play Snake, Memory Match, Typing Speed Test and more — right in your browser',       'var(--purple)', 'rgba(155,126,222,0.1)', url_for('games')),
+        ('fa-code',        'Live Playground',        'Write HTML, CSS and JS and see it run instantly — save and share your projects',     'var(--blue)',   'rgba(93,155,236,0.1)',   url_for('play')),
+        ('fa-robot',       'AI Tutor',               'An AI that explains code in plain language — guides you without just giving answers', 'var(--yellow)', 'rgba(255,179,71,0.1)',   url_for('play')),
+        ('fa-trophy',      'XP & Levels',            'Earn XP for every lesson, level up from Rookie to Master, rank on the leaderboard', 'var(--yellow)', 'rgba(255,179,71,0.1)',   url_for('leaderboard')),
+        ('fa-fire',        'Daily Challenges',       'A new coding challenge every single day — complete it for bonus XP',                 'var(--red)',    'rgba(226,92,92,0.1)',    url_for('play')),
+      ] %}
+      <a href="{{ link }}" class="feature-card" style="--accent:{{ color }};--icon-bg:{{ icon_bg }};text-decoration:none;">
+        <div class="icon"><i class="fas {{ icon }}" style="color:{{ color }};"></i></div>
+        <h3>{{ name }}</h3>
+        <p>{{ desc }}</p>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ══ GAMES PREVIEW ════════════════════════════════════════════════ -->
+<section class="section section-navy">
+  <div class="container">
+    <div class="ta-center mb-lg">
+      <span class="section-label"><i class="fas fa-gamepad"></i> Play &amp; Learn</span>
+      <h2 class="section-title">Arcade Games Built In</h2>
+      <p class="section-sub">Play now in the browser — then open the code and make it your own</p>
+    </div>
+    <div class="flex-center">
+      {% for icon, name, desc, color in [
+        ('fa-worm',      'Snake',          'Arrow keys. Eat. Grow. Don\'t hit the wall.',    'var(--green)'),
+        ('fa-brain',     'Memory Match',   'Flip cards. Find all 8 pairs. Beat your score.','var(--purple)'),
+        ('fa-star',      'Catch the Stars','Move your basket. Catch stars. Don\'t miss.',   'var(--yellow)'),
+        ('fa-keyboard',  'Typing Speed',   'Type the sentence. See your WPM. Improve.',     'var(--blue)'),
+      ] %}
+      <div class="game-card" onclick="window.location.href='{{ url_for('games') }}'" style="width:230px;">
+        <div class="game-card-thumb" style="background:linear-gradient(135deg,{{ color }}22,{{ color }}44);color:{{ color }};"><i class="fas {{ icon }}"></i></div>
+        <div class="game-card-body">
+          <h4>{{ name }}</h4>
+          <p>{{ desc }}</p>
+          <div class="game-card-actions">
+            <a href="{{ url_for('games') }}" class="btn btn-sm btn-green" style="text-decoration:none;"><i class="fas fa-play"></i> Play</a>
+            <a href="{{ url_for('games') }}" class="btn btn-sm btn-blue"  style="text-decoration:none;"><i class="fas fa-code"></i> Remix</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="ta-center mt-lg">
+      <a href="{{ url_for('games') }}" class="btn btn-xl btn-yellow">See All Games</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══ LEADERBOARD PREVIEW ═════════════════════════════════════════ -->
+{% if top_users %}
+<section class="section section-light">
+  <div class="container-sm">
+    <div class="ta-center mb-lg">
+      <span class="section-label" style="color:var(--yellow);"><i class="fas fa-trophy"></i> Top Coders</span>
+      <h2 class="section-title dark">Who's Leading Right Now?</h2>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0.6rem;">
+      {% for user in top_users %}
+      <div class="lb-row {% if loop.index==1 %}gold{% elif loop.index==2 %}silver{% elif loop.index==3 %}bronze{% endif %}">
+        <div style="width:32px;text-align:center;font-size:1.1rem;font-weight:800;color:var(--yellow);flex-shrink:0;">
+          {{ loop.index }}
+        </div>
+        <div style="font-size:1.3rem;flex-shrink:0;color:var(--purple);"><i class="fas {{ user.avatar }}"></i></div>
+        <div style="flex:1;">
+          <div style="font-weight:700;color:var(--ink);font-size:0.95rem;">{{ user.username }}</div>
+          <div style="font-size:0.75rem;color:var(--smoke);">{{ user.level.name }} — Level {{ user.level.num }}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-weight:800;color:var(--yellow-d);font-size:1rem;">{{ user.xp }}</div>
+          <div style="font-size:0.7rem;color:var(--smoke);">XP</div>
+        </div>
+        {% if user.streak_days >= 3 %}
+        <div style="background:rgba(226,92,92,0.1);color:var(--red);border-radius:var(--r-pill);padding:0.25rem 0.6rem;font-size:0.78rem;font-weight:700;flex-shrink:0;"><i class="fas fa-fire"></i> {{ user.streak_days }}</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="ta-center mt-lg">
+      <a href="{{ url_for('leaderboard') }}" class="btn btn-blue" style="text-decoration:none;">See Full Leaderboard</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ══ TESTIMONIALS ═════════════════════════════════════════════════ -->
+{% if testimonials %}
+<section class="section section-fog">
+  <div class="container">
+    <div class="ta-center mb-lg">
+      <span class="section-label" style="color:var(--purple);"><i class="fas fa-comment"></i> Real Feedback</span>
+      <h2 class="section-title dark">What Kids Say</h2>
+    </div>
+    <div class="grid-3">
+      {% for t in testimonials %}
+      <div class="testimonial-card">
+        <span class="t-emoji"><i class="fas {{ t.emoji }}"></i></span>
+        <p class="t-quote">"{{ t.text }}"</p>
+        <div class="t-author">— {{ t.author }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ══ CTA ═════════════════════════════════════════════════════════ -->
+<section class="cta-section">
+  <div class="container-sm" style="position:relative;z-index:1;">
+    <span class="section-label" style="justify-content:center;display:flex;margin-bottom:1rem;">Ready?</span>
+    <h2 class="section-title" style="color:var(--white);font-size:clamp(2rem,4vw,3rem);margin-bottom:0.75rem;">Start coding today. It's free.</h2>
+    <p style="color:var(--mist);font-size:1.05rem;margin-bottom:2rem;">Join kids across South Africa already building real things — no credit card, no catch.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem;">
+      <a href="{{ url_for('signup') }}" class="btn btn-xl btn-yellow" style="text-decoration:none;">Sign Up Free</a>
+      <a href="{{ url_for('learn') }}"  class="btn btn-xl btn-ghost" style="color:var(--white);border-color:rgba(255,255,255,0.25);text-decoration:none;">Browse Lessons</a>
+    </div>
+    <p style="font-size:0.82rem;color:var(--smoke);">
+      Questions? <a href="mailto:info@nexapals.co.za" style="color:var(--yellow);font-weight:700;">info@nexapals.co.za</a>
+      &nbsp;·&nbsp;
+      <a href="{{ url_for('about') }}" style="color:var(--yellow);font-weight:700;">About Nexa Pals</a>
+    </p>
+  </div>
+</section>
+
 {% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Lesson' if lesson else 'New Lesson' }}{% endblock %}
+
+{% block content %}
+<div style="max-width:800px;margin:2rem auto;padding:0 1.5rem;">
+  <h1 style="color:#1e3a5f;"><i class="fas fa-book-open"></i> {{ 'Edit Lesson' if lesson else 'New Lesson' }}</h1>
+  <p style="color:#6c757d;font-size:0.85rem;">
+    Content is rendered as raw HTML on the lesson page — write it the same way the existing lessons look
+    (headings, &lt;pre&gt;&lt;code&gt; blocks, etc). Quiz and practice fields must be valid JSON.
+  </p>
+
+  <form method="POST" style="background:white;border-radius:24px;padding:1.5rem;border:2px solid #e9ecef;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem;">
+      <div>
+        <label class="form-label">Track</label>
+        <select name="track" class="form-input">
+          {% for t in ['html','css','javascript'] %}
+          <option value="{{ t }}" {% if lesson and lesson.track==t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Order</label>
+        <input type="number" name="order" class="form-input" value="{{ lesson.order if lesson else 0 }}">
+      </div>
+      <div>
+        <label class="form-label">XP reward</label>
+        <input type="number" name="xp_reward" class="form-input" value="{{ lesson.xp_reward if lesson else 10 }}">
+      </div>
+    </div>
+
+    <div style="margin-bottom:1rem;">
+      <label class="form-label">Title</label>
+      <input type="text" name="title" class="form-input" required value="{{ lesson.title if lesson else '' }}">
+    </div>
+
+    <div style="margin-bottom:1rem;">
+      <label class="form-label">Content (HTML)</label>
+      <textarea name="content" rows="12" style="width:100%;font-family:monospace;font-size:0.85rem;padding:0.7rem;border-radius:12px;border:2px solid #e9ecef;box-sizing:border-box;">{{ lesson.content if lesson else '' }}</textarea>
+    </div>
+
+    <div style="margin-bottom:1rem;">
+      <label class="form-label">Quiz JSON — array of {q, options, answer}</label>
+      <textarea name="quiz_json" rows="6" style="width:100%;font-family:monospace;font-size:0.85rem;padding:0.7rem;border-radius:12px;border:2px solid #e9ecef;box-sizing:border-box;">{{ lesson.quiz_json if lesson else '[]' }}</textarea>
+    </div>
+
+    <div style="margin-bottom:1.2rem;">
+      <label class="form-label">Practice JSON (optional) — {task, starter_html, starter_js, checks, success_msg}</label>
+      <textarea name="practice_json" rows="6" style="width:100%;font-family:monospace;font-size:0.85rem;padding:0.7rem;border-radius:12px;border:2px solid #e9ecef;box-sizing:border-box;">{{ lesson.practice_json if lesson else '' }}</textarea>
+    </div>
+
+    <button type="submit" class="btn btn-yellow"><i class="fas fa-floppy-disk"></i> Save Lesson</button>
+    <a href="{{ url_for('admin') }}" class="btn btn-ghost" style="text-decoration:none;">Cancel</a>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}My Profile{% endblock %}
+{% block content %}
+
+<!-- Header — growth-focused -->
+<div class="profile-hero">
+  <div class="profile-hero-inner">
+    <div class="profile-avatar-wrap">
+      <div class="profile-avatar">
+        <i class="fas {{ current_user.avatar }}"></i>
+      </div>
+      <button type="button" class="btn btn-sm btn-yellow" onclick="document.getElementById('avatarPicker').style.display='flex'">
+        Change
+      </button>
+    </div>
+
+    <div class="profile-info">
+      <h1>{{ current_user.username }}</h1>
+      <div class="profile-level">{{ current_user.level.name }} · Level {{ current_user.level.num }}</div>
+      <p class="profile-encourage">
+        {% if current_user.level.num <= 2 %}
+          You're just getting started — every lesson builds your skills.
+        {% elif current_user.level.num <= 5 %}
+          You're growing fast. Keep shipping and leveling up!
+        {% else %}
+          You're becoming a real coder. Keep going — the best is ahead.
+        {% endif %}
+      </p>
+
+      <div class="profile-progress">
+        <div class="prog-bar-wrap light" style="height:12px;">
+          <div class="prog-bar-fill" style="width:{{ current_user.level_progress_pct }}%;background:linear-gradient(90deg,var(--yellow),var(--purple));"></div>
+        </div>
+        <div class="profile-progress-meta">
+          <span>{{ current_user.xp }} XP</span>
+          {% if current_user.level.next_xp %}
+          <span>{{ current_user.level.next_xp - current_user.xp }} XP to next level</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="profile-pills">
+        <span class="profile-pill"><i class="fas fa-book-open"></i> {{ progress|length }} lessons</span>
+        <span class="profile-pill"><i class="fas fa-code"></i> {{ projects|length }} projects</span>
+        {% if current_user.streak_days >= 1 %}
+        <span class="profile-pill streak"><i class="fas fa-fire"></i> {{ current_user.streak_days }} day streak</span>
+        {% endif %}
+        <span class="profile-pill"><i class="fas fa-medal"></i> {{ badges|length }} badges</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Avatar picker modal -->
+<div id="avatarPicker" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:24px;padding:2rem;max-width:400px;width:90%;">
+    <h3 style="margin:0 0 1rem;text-align:center;">Choose your avatar</h3>
+    <form method="POST" action="{{ url_for('set_avatar') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div style="display:flex;flex-wrap:wrap;gap:0.8rem;justify-content:center;margin-bottom:1.5rem;">
+        {% for av in ['fa-egg','fa-dove','fa-crow','fa-kiwi-bird','fa-rocket','fa-robot','fa-hat-wizard','fa-cat','fa-dragon','fa-star','fa-gem','fa-bolt'] %}
+        <label style="cursor:pointer;">
+          <input type="radio" name="avatar" value="{{ av }}" style="display:none;" {% if current_user.avatar == av %}checked{% endif %}>
+          <div class="av-opt" style="font-size:1.4rem;color:#3A6EA5;width:56px;height:56px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:3px solid {% if current_user.avatar == av %}#FFB347{% else %}#e9ecef{% endif %};transition:0.15s;cursor:pointer;"
+               onclick="document.querySelectorAll('.av-opt').forEach(e=>e.style.borderColor='#e9ecef');this.style.borderColor='#FFB347'">
+            <i class="fas {{ av }}"></i>
+          </div>
+        </label>
+        {% endfor %}
+      </div>
+      <button type="submit" class="big-btn" style="width:100%;font-size:1rem;padding:0.7rem;">Save Avatar</button>
+    </form>
+    <button onclick="document.getElementById('avatarPicker').style.display='none'" 
+            style="width:100%;margin-top:0.5rem;background:none;border:2px solid #e9ecef;border-radius:30px;padding:0.5rem;cursor:pointer;font-family:inherit;">Cancel</button>
+  </div>
+</div>
+
+<div style="max-width:800px;margin:2rem auto;padding:0 1rem;">
+
+  <!-- Badges -->
+  <h2 style="margin-bottom:1rem;"><i class="fas fa-medal"></i> Badges</h2>
+  {% if badges %}
+  <div style="display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:2rem;">
+    {% for ub in badges %}
+    <div style="background:white;border-radius:16px;padding:1rem;border:3px solid #{{ ub.badge.color }};box-shadow:0 4px 0 #{{ ub.badge.color }}88;text-align:center;width:120px;">
+      <div style="font-size:1.7rem;color:#{{ ub.badge.color }};"><i class="fas {{ ub.badge.emoji }}"></i></div>
+      <div style="font-size:0.8rem;font-weight:700;color:#1e3a5f;margin-top:0.3rem;">{{ ub.badge.name }}</div>
+      <div style="font-size:0.7rem;color:#6c757d;margin-top:0.2rem;">{{ ub.badge.description }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="background:#f0f5ff;border-radius:16px;padding:1.5rem;text-align:center;margin-bottom:2rem;color:#6c757d;">
+    <img src="{{ url_for('static', filename='images/mascot_icon.png') }}" alt="" style="width:56px;height:56px;border-radius:50%;object-fit:cover;background:#1e2a3e;padding:4px;margin-bottom:0.6rem;">
+    <div>No badges yet — complete lessons to earn your first one.</div>
+  </div>
+  {% endif %}
+
+  <!-- Recent Projects -->
+  {% if current_user.classroom %}
+  <div style="background:#e8f5f0;border:2px solid #1e5f4b;border-radius:16px;padding:0.9rem 1.2rem;margin-bottom:1.5rem;font-size:0.85rem;color:#0e3a2e;">
+    <i class="fas fa-people-group"></i> You're in <strong>{{ current_user.classroom.name }}</strong>.
+  </div>
+  {% else %}
+  <div style="background:#f0f5ff;border:2px solid #5D9BEC;border-radius:16px;padding:0.9rem 1.2rem;margin-bottom:1.5rem;font-size:0.85rem;color:#1e3a5f;">
+    <i class="fas fa-people-group"></i> Have a classroom join code from your teacher? <a href="{{ url_for('join_classroom') }}" style="color:#5D9BEC;font-weight:700;">Join a classroom</a>.
+  </div>
+  {% endif %}
+
+  <h2 style="margin-bottom:1rem;"><i class="fas fa-folder-open"></i> My Projects</h2>
+  {% if projects %}
+  <div style="display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:2rem;">
+    {% for proj in projects[:6] %}
+    <a href="{{ url_for('play_project', project_id=proj.id) }}" style="text-decoration:none;">
+      <div style="background:white;border-radius:16px;padding:1rem;border:3px solid #FFB347;box-shadow:0 4px 0 #c17d2e;width:180px;transition:0.2s;"
+           onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+        <div style="font-size:1.5rem;margin-bottom:0.5rem;color:#5D9BEC;"><i class="fas fa-code"></i></div>
+        <div style="font-weight:700;color:#1e3a5f;font-size:0.9rem;word-break:break-word;">{{ proj.title }}</div>
+        <div style="font-size:0.75rem;color:#6c757d;margin-top:0.3rem;">{{ proj.updated_at.strftime('%d %b') if proj.updated_at else '' }}</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  <a href="{{ url_for('my_projects') }}" style="color:#5D9BEC;font-weight:600;text-decoration:none;">See all projects</a>
+  {% else %}
+  <div style="background:#f0f5ff;border-radius:16px;padding:1.5rem;text-align:center;margin-bottom:2rem;color:#6c757d;">
+    No projects yet — <a href="{{ url_for('play') }}" style="color:#5D9BEC;font-weight:600;">open the Playground</a> and build something!
+  </div>
+  {% endif %}
+
+  <!-- Completed Lessons -->
+  <h2 style="margin-bottom:1rem;"><i class="fas fa-circle-check"></i> Completed Lessons</h2>
+  {% if progress %}
+  <div style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:2rem;">
+    {% for p in progress %}
+    <div style="background:white;border-radius:12px;padding:0.8rem 1.2rem;border:2px solid #1e5f4b;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:600;color:#1e3a5f;"><i class="fas fa-circle-check" style="color:#1e5f4b;"></i> Lesson {{ p.lesson_id }}</span>
+      <span style="background:#FFB347;color:#1e2a3e;border-radius:20px;padding:0.2rem 0.6rem;font-size:0.8rem;font-weight:700;">{{ p.score }}%</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="background:#f0f5ff;border-radius:16px;padding:1.5rem;text-align:center;margin-bottom:2rem;color:#6c757d;">
+    No lessons completed yet — <a href="{{ url_for('learn') }}" style="color:#5D9BEC;font-weight:600;">start learning</a>!
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+document.getElementById('avatarPicker').addEventListener('click', function(e) {
+  if (e.target === this) this.style.display = 'none';
+});
+document.querySelectorAll('label').forEach(label => {
+  label.addEventListener('click', () => {
+    document.getElementById('avatarPicker').style.display = 'flex';
+  });
+});
+</script>
+{% endblock %}

@@ -1,50 +1,66 @@
 {% extends "base.html" %}
-
-{% block title %}Sign Up{% endblock %}
+{% block title %}Sign Up Free{% endblock %}
 
 {% block content %}
-<div class="hero" style="padding: 2rem;">
-    <div class="hero-text" style="text-align: center; margin: 0 auto;">
-        <h1>📝 <span>Create Account</span></h1>
-        <p>Join Nexa Pals and start your coding adventure</p>
+<section class="auth-page">
+  <div class="auth-card-wrap" style="max-width:460px;">
+    <div class="auth-brand">
+      <img src="{{ url_for('static', filename='images/mascot_icon.png') }}" alt="Nexa Pals">
+      <h1>Start your journey</h1>
+      <p>Free forever — no credit card needed</p>
     </div>
-</div>
 
-<div style="max-width: 450px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 40px; box-shadow: 0 15px 0 #9B7EDE; border: 3px solid #FFB347;">
-    <form method="POST">
+    <div class="auth-card">
+      <form method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div style="margin-bottom: 1.5rem;">
-            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1e5f4b;">
-                <i class="fas fa-user"></i> Username
-            </label>
-            <input type="text" name="username" placeholder="Choose a username" required
-                   style="width: 100%; padding: 0.8rem; border: 2px solid #FFB347; border-radius: 50px; font-family: inherit;">
+
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" class="form-input" placeholder="Choose a username" required autocomplete="username">
+          <div style="font-size:0.75rem;color:var(--smoke);margin-top:0.3rem;">Letters, numbers, - and _ only. Min 3 characters.</div>
         </div>
-        
-        <div style="margin-bottom: 1.5rem;">
-            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1e5f4b;">
-                <i class="fas fa-envelope"></i> Email Address
-            </label>
-            <input type="email" name="email" placeholder="your@email.com" required
-                   style="width: 100%; padding: 0.8rem; border: 2px solid #FFB347; border-radius: 50px; font-family: inherit;">
+
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-input" placeholder="your@email.com" required autocomplete="email">
         </div>
-        
-        <div style="margin-bottom: 1.5rem;">
-            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1e5f4b;">
-                <i class="fas fa-lock"></i> Password
-            </label>
-            <input type="password" name="password" placeholder="Create a password" required
-                   style="width: 100%; padding: 0.8rem; border: 2px solid #FFB347; border-radius: 50px; font-family: inherit;">
-            <p style="font-size: 0.7rem; margin-top: 0.3rem; color: #6c757d;">At least 4 characters</p>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-input" placeholder="At least 6 characters" required autocomplete="new-password">
         </div>
-        
-        <button type="submit" class="big-btn" style="width: 100%; font-size: 1.2rem; margin-top: 0.5rem;">
-            <i class="fas fa-user-plus"></i> Sign Up
+
+        <div style="margin-bottom:1rem;">
+          <label style="display:flex;align-items:flex-start;gap:0.5rem;font-size:0.85rem;color:var(--mist);cursor:pointer;">
+            <input type="checkbox" name="is_minor" id="isMinorCheck" onchange="document.getElementById('parentEmailGroup').style.display=this.checked?'block':'none'" style="margin-top:0.2rem;accent-color:var(--yellow);">
+            I am under 18
+          </label>
+          <div id="parentEmailGroup" style="display:none;margin-top:0.7rem;">
+            <label class="form-label">Parent or guardian's email</label>
+            <input type="email" name="parent_email" class="form-input" placeholder="parent@email.com">
+            <div style="font-size:0.75rem;color:var(--smoke);margin-top:0.3rem;">We'll email them to let them know about this account.</div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:1.1rem;">
+          <label style="display:flex;align-items:flex-start;gap:0.5rem;font-size:0.82rem;color:var(--mist);cursor:pointer;">
+            <input type="checkbox" name="terms_accepted" required style="margin-top:0.2rem;accent-color:var(--yellow);">
+            <span>I agree to the <a href="{{ url_for('terms') }}" style="color:var(--yellow);">Terms</a> and <a href="{{ url_for('privacy') }}" style="color:var(--yellow);">Privacy Policy</a></span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-yellow" style="width:100%;font-size:1rem;padding:0.85rem;">
+          Create free account <i class="fas fa-rocket"></i>
         </button>
-    </form>
-    
-    <div style="text-align: center; margin-top: 1.5rem;">
-        <p>Already have an account? <a href="{{ url_for('login') }}" style="color: #FFB347; font-weight: 600;">Login here</a></p>
+      </form>
+
+      <div class="divider-dark" style="margin:1.4rem 0;"></div>
+
+      <div class="auth-footer">
+        Already have an account?
+        <a href="{{ url_for('login') }}">Log in →</a>
+      </div>
     </div>
-</div>
+  </div>
+</section>
 {% endblock %}

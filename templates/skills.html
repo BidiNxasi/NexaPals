@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}My Skills{% endblock %}
+{% block content %}
+<div style="max-width:820px;margin:1.5rem auto;padding:0 1.2rem;">
+  <h1 style="color:#1e3a5f;font-size:1.6rem;margin:.2rem 0;"><i class="fas fa-chart-simple"></i> My Skills</h1>
+  <p style="color:#55688a;margin:0 0 1rem;">Each bar shows how smoothly you solve missions on that skill: fewer tries and fewer hints make it stronger. Weak bars tell you what to practise next.</p>
+
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem;">
+    <span class="nm-stat" style="background:#d4edda;border-radius:14px;padding:.4rem .9rem;font-weight:800;color:#155724;">{{ summary.mastery.mastered }} lessons mastered</span>
+    <span style="background:#e4efff;border-radius:14px;padding:.4rem .9rem;font-weight:800;color:#1e3a5f;">{{ summary.mastery.solid }} solid</span>
+    <span style="background:#fff6e6;border-radius:14px;padding:.4rem .9rem;font-weight:800;color:#7a4a00;">{{ summary.mastery.practising }} still practising</span>
+    <a href="{{ url_for('warmup') }}" class="big-btn" style="text-decoration:none;margin-left:auto;font-size:.9rem;padding:.5rem 1.1rem;"><i class="fas fa-bolt"></i> Today's warm-up</a>
+  </div>
+
+  {% if weakest %}
+  <div style="background:#fff6e6;border-left:6px solid #FFB347;border-radius:14px;padding:.8rem 1rem;margin-bottom:1rem;color:#7a4a00;font-weight:700;">
+    Practise next:
+    {% for w in weakest %}<a href="{{ url_for('practice_skill', skill=w) }}" style="color:#7a4a00;">{{ labels[w] }}</a>{{ ', ' if not loop.last }}{% endfor %}
+  </div>
+  {% endif %}
+
+  <div style="background:#fff;border:2px solid #e9ecef;border-radius:20px;padding:1rem 1.2rem;">
+    {% for r in rows %}
+    <div style="display:flex;align-items:center;gap:.8rem;padding:.55rem 0;border-bottom:1px solid #f0f3f8;flex-wrap:wrap;">
+      <div style="flex:0 0 170px;font-weight:700;color:#1e3a5f;">{{ r.label }}</div>
+      <div style="flex:1;min-width:140px;background:#eef3ff;border-radius:10px;height:14px;overflow:hidden;" role="img"
+           aria-label="{{ r.label }}: {{ (r.strength * 100)|round|int ~ ' percent, ' ~ r.band if r.strength is not none else 'not started' }}">
+        {% if r.strength is not none %}
+        <div style="height:100%;width:{{ (r.strength * 100)|round|int }}%;background:{{ {'strong':'#1e5f4b','ok':'#5D9BEC','weak':'#C17D2E'}[r.band] }};"></div>
+        {% endif %}
+      </div>
+      <div style="flex:0 0 90px;font-size:.82rem;font-weight:800;color:#55688a;">{{ r.band|capitalize if r.strength is not none else 'Not started' }}</div>
+      <a href="{{ url_for('practice_skill', skill=r.key) }}" style="font-size:.82rem;font-weight:800;color:#2f6fc0;">Practise</a>
+    </div>
+    {% endfor %}
+  </div>
+
+  <h2 style="color:#1e3a5f;font-size:1.2rem;margin:1.5rem 0 .5rem;">Capstone projects</h2>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap;">
+    {% for t,n in [('html','HTML'),('css','CSS'),('javascript','JavaScript')] %}
+    <a href="{{ url_for('capstone', track=t) }}" class="big-btn" style="text-decoration:none;font-size:.9rem;padding:.5rem 1.1rem;"><i class="fas fa-flag-checkered"></i> {{ n }} capstone</a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
