@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Teacher Dashboard{% endblock %}
+
+{% block content %}
+<div style="max-width:900px;margin:2rem auto;padding:0 1.5rem;">
+
+  {% if not classroom %}
+  <div style="background:white;border:3px solid #1e5f4b;border-radius:24px;padding:2rem;text-align:center;max-width:480px;margin:2rem auto;">
+    <div style="font-size:2.4rem;color:#1e5f4b;margin-bottom:0.5rem;"><i class="fas fa-chalkboard-user"></i></div>
+    <h1 style="color:#1e3a5f;font-size:1.5rem;">Create Your Classroom</h1>
+    <p style="color:#6c757d;font-size:0.9rem;">
+      Get a join code your students can enter to link their accounts to your classroom, so you can see
+      everyone's progress in one place.
+    </p>
+    <form method="POST" action="{{ url_for('create_classroom') }}" style="margin-top:1rem;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="text" name="name" class="form-input" placeholder="e.g. Mrs. Dlamini's Grade 6 Class"
+             style="margin-bottom:1rem;">
+      <button type="submit" class="btn btn-yellow" style="width:100%;"><i class="fas fa-plus"></i> Create Classroom</button>
+    </form>
+  </div>
+
+  {% else %}
+  <div style="background:linear-gradient(135deg,#1e5f4b,#0e3a2e);border-radius:24px;padding:1.5rem 2rem;color:white;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+    <div>
+      <h1 style="color:white;margin:0;font-size:1.5rem;">{{ classroom.name }}</h1>
+      <p style="color:#c5e8d5;margin:0.3rem 0 0;font-size:0.85rem;">{{ students|length }} student{{ 's' if students|length != 1 }}</p>
+    </div>
+    <div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:16px;padding:0.7rem 1.4rem;">
+      <div style="font-size:0.75rem;color:#c5e8d5;text-transform:uppercase;letter-spacing:0.05em;">Join Code</div>
+      <div style="font-size:1.6rem;font-weight:800;letter-spacing:0.1em;">{{ classroom.join_code }}</div>
+    </div>
+  </div>
+
+  <div style="background:white;border-radius:24px;padding:1.5rem;border:2px solid #e9ecef;margin-bottom:1.2rem;">
+    <h2 style="color:#1e3a5f;font-size:1.1rem;margin-top:0;"><i class="fas fa-triangle-exclamation" style="color:#C17D2E;"></i> Where the class is stuck</h2>
+    {% if stuck_rows %}
+    <p style="color:#6c757d;font-size:.85rem;margin-top:0;">Steps where at least 40% of your students needed 4+ checks, got stuck or revealed the solution. Consider reteaching these, or tell us if the step is badly worded.</p>
+    {% for f in stuck_rows %}
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;background:#fff6e6;border-radius:12px;padding:.6rem .9rem;margin-bottom:.4rem;">
+      <strong style="color:#1e3a5f;flex:1;min-width:160px;">{{ f.lesson }} · step {{ f.step + 1 }}</strong>
+      <span style="color:#7a4a00;">{{ f.skill_label }}</span>
+      <span style="color:#7a4a00;font-weight:800;">{{ f.struggled }} of {{ f.learners }} struggled</span>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p style="color:#6c757d;font-size:.9rem;margin:0;">Nothing flagged yet. This fills in once at least 3 of your students have worked through the missions.</p>
+    {% endif %}
+  </div>
+
+  <div style="background:white;border-radius:24px;padding:1.5rem;border:2px solid #e9ecef;">
+    <h2 style="color:#1e3a5f;font-size:1.1rem;margin-top:0;">Students</h2>
+    {% if not students %}
+    <p style="color:#6c757d;text-align:center;padding:2rem;">
+      No students yet — share the join code <strong>{{ classroom.join_code }}</strong> with your class.
+      They can enter it at <a href="{{ url_for('join_classroom') }}">nexapals.co.za/join-classroom</a>.
+    </p>
+    {% else %}
+    <div style="display:flex;flex-direction:column;gap:0.5rem;">
+      {% for s in students %}
+      <div style="display:flex;align-items:center;gap:1rem;background:#f0f5ff;border-radius:14px;padding:0.7rem 1rem;flex-wrap:wrap;">
+        <div style="font-size:1.2rem;color:#3A6EA5;"><i class="fas {{ s.avatar }}"></i></div>
+        <div style="flex:1;min-width:120px;font-weight:700;color:#1e3a5f;">{{ s.username }}</div>
+        <div style="font-size:0.8rem;color:#6c757d;">{{ s.level.name }}</div>
+        <div style="font-size:0.85rem;color:#FFB347;font-weight:700;">{{ s.xp }} XP</div>
+        <div style="font-size:0.85rem;color:#1e5f4b;">{{ s.lessons_completed }} lesson{{ 's' if s.lessons_completed != 1 }}</div>
+        {% set sm = summaries.get(s.id) %}
+        {% if sm %}
+        <div style="font-size:0.78rem;color:#55688a;" title="Lessons finished without needing the solution">{{ sm.mastery.mastered }} mastered · {{ sm.mastery.practising }} practising</div>
+        {% if sm.weakest %}<div style="font-size:0.78rem;color:#7a4a00;background:#fff6e6;border-radius:10px;padding:.1rem .5rem;font-weight:700;">Needs: {{ skill_labels.get(sm.weakest, sm.weakest) }}</div>{% endif %}
+        {% endif %}
+        <div style="font-size:0.85rem;color:#e25c5c;"><i class="fas fa-fire"></i> {{ s.streak_days }}</div>
+        <form method="POST" action="{{ url_for('remove_student', user_id=s.id) }}" onsubmit="return confirm('Remove {{ s.username }} from this classroom?');" style="margin:0;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" style="background:none;border:none;color:#e25c5c;cursor:pointer;font-family:inherit;font-size:0.8rem;"><i class="fas fa-user-minus"></i></button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

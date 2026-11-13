@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Parent Preferences{% endblock %}
+
+{% block content %}
+<div style="max-width:560px;margin:2.5rem auto;padding:0 1.5rem;">
+  <h1 style="color:#1e3a5f;"><i class="fas fa-envelope-open-text"></i> Parent Preferences</h1>
+  <p style="color:#6c757d;">
+    Managing updates for <strong>{{ student.username }}</strong>'s Nexa Pals account. No login needed —
+    this link is just for you.
+  </p>
+
+  <div style="background:white;border-radius:20px;padding:1.5rem;margin-top:1.5rem;box-shadow:0 4px 14px rgba(0,0,0,0.06);">
+    <form method="POST">
+      <label style="display:flex;align-items:flex-start;gap:0.8rem;cursor:pointer;">
+        <input type="checkbox" name="digest_opt_in" value="1" {% if student.parent_digest_opt_in %}checked{% endif %}
+               style="width:20px;height:20px;margin-top:0.15rem;">
+        <span>
+          <strong>Send me a weekly progress email</strong>
+          <br>
+          <span style="color:#6c757d;font-size:0.88rem;">
+            A short summary once a week — lessons completed, XP earned, and any new badges.
+            Off by default. Only sent for weeks with real activity, never an empty "nothing happened" email.
+          </span>
+        </span>
+      </label>
+      <button type="submit" class="btn btn-yellow" style="margin-top:1.2rem;">
+        <i class="fas fa-floppy-disk"></i> Save preferences
+      </button>
+    </form>
+  </div>
+
+  <p style="color:#6c757d;font-size:0.85rem;margin-top:1.5rem;">
+    Questions, or want the account reviewed or removed? Contact us at
+    <strong>{{ contact_email if contact_email else 'info@nexapals.co.za' }}</strong>. See our
+    <a href="{{ url_for('privacy') }}">Privacy Policy</a> for what we collect and why.
+  </p>
+</div>
+{% endblock %}

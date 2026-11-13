@@ -5,7 +5,7 @@
 {% block content %}
 <div class="hero" style="padding: 2rem;">
     <div class="hero-text">
-        <h1>📁 <span>My Projects</span></h1>
+        <h1><i class="fas fa-folder-open"></i> <span>My Projects</span></h1>
         <p>Everything you've built so far, all in one place.</p>
     </div>
     <a href="{{ url_for('play') }}" class="hero-avatar" style="text-decoration: none; background: #9B7EDE;">
@@ -36,9 +36,9 @@
     </div>
     {% else %}
     <div style="text-align: center; padding: 3rem 1rem;">
-        <i class="fas fa-folder-open" style="font-size: 3rem; color: #FFB347;"></i>
+        <img src="{{ url_for('static', filename='images/mascot_icon.png') }}" alt="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;background:#1e2a3e;padding:6px;">
         <h3 style="margin-top: 1rem;">No projects yet!</h3>
-        <p>Head to the playground and build your first project.</p>
+        <p>Head to the playground and build your first project — I'll be there to help.</p>
         <a href="{{ url_for('play') }}" class="big-btn" style="display: inline-block; margin-top: 1rem; text-decoration: none;">
             <i class="fas fa-rocket"></i> Start Coding
         </a>
@@ -59,10 +59,10 @@ async function deleteProjectFromGallery(projectId, btn) {
         if (data.success) {
             btn.closest('.project-card').remove();
         } else {
-            alert('❌ ' + (data.message || 'Error deleting project'));
+            alert(data.message || 'Error deleting project');
         }
     } catch (e) {
-        alert('❌ Network error. Please try again.');
+        alert('Network error. Please try again.');
     }
 }
 </script>

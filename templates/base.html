@@ -1,131 +1,239 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Nexa Pals · {% block title %}Coding for Kids 10+{% endblock %}</title>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/NexaLogo.png') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="description" content="Nexa Pals — Free coding for South African kids 10+. Learn HTML, CSS & JavaScript through games, projects and AI tutoring.">
+  <title>Nexa Pals · {% block title %}Learn to Code{% endblock %}</title>
+  <meta property="og:title" content="Nexa Pals — Free Coding for South African Kids">
+  <meta property="og:description" content="Learn HTML, CSS & JavaScript through games, projects and AI tutoring. 100% free.">
+  <meta property="og:image" content="{{ url_for('static', filename='images/NexaLogo.png', _external=True) }}">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/mascot_icon.png') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
 </head>
 <body>
+<a href="#main" class="skip-link">Skip to main content</a>
 
+<!-- ── NAVBAR ─────────────────────────────────────────── -->
 <nav class="navbar">
-    <div class="logo-area">
-        <a href="{{ url_for('index') }}" class="logo-placeholder" style="display:flex;align-items:center;justify-content:center;text-decoration:none;">
-            <img src="{{ url_for('static', filename='images/NexaLogo.png') }}" alt="Nexa Pals logo" style="width:100%;height:100%;object-fit:contain;border-radius:50%;">
+  <a href="{{ url_for('index') }}" class="logo-area">
+    <div class="logo-placeholder">
+      <img src="{{ url_for('static', filename='images/mascot_icon.png') }}" alt="Nexa Pals mascot" style="width:100%;height:100%;object-fit:cover;">
+    </div>
+    <span class="logo-text">Nexa<span>Pals</span></span>
+  </a>
+
+  <!-- Desktop links -->
+  <div class="nav-links" id="navLinks">
+    <a href="{{ url_for('learn') }}"       {% if request.endpoint == 'learn'                       %}class="active"{% endif %}><i class="fas fa-book-open"></i> Learn</a>
+    <a href="{{ url_for('games') }}"       {% if request.endpoint == 'games'                       %}class="active"{% endif %}><i class="fas fa-gamepad"></i> Games</a>
+    <a href="{{ url_for('play') }}"        {% if request.endpoint in ['play','play_project']        %}class="active"{% endif %}><i class="fas fa-bolt"></i> Play</a>
+    <a href="{{ url_for('create') }}"      {% if request.endpoint == 'create'                      %}class="active"{% endif %}><i class="fas fa-wand-magic-sparkles"></i> Create</a>
+    <a href="{{ url_for('leaderboard') }}" {% if request.endpoint == 'leaderboard'                 %}class="active"{% endif %}><i class="fas fa-trophy"></i> Ranks</a>
+
+    {% if current_user.is_authenticated %}
+      <div class="nav-user">
+        <a href="{{ url_for('profile') }}" class="nav-avatar{% if request.endpoint == 'profile' %} active{% endif %}" title="{{ current_user.level.name }} — {{ current_user.xp }} XP">
+          <i class="fas {{ current_user.avatar }}"></i>
         </a>
-        <div class="logo-text">Nexa <span>Pals</span></div>
-    </div>
-    <div class="nav-links">
-        <a href="{{ url_for('learn') }}">learn</a>
-        <a href="{{ url_for('games') }}">games</a>
-        <a href="{{ url_for('play') }}">play</a>
-        <a href="{{ url_for('create') }}">create</a>
-        <a href="{{ url_for('buddies') }}">pals</a>
-        <a href="{{ url_for('about') }}">about</a>
-        {% if current_user.is_authenticated %}
-            <a href="{{ url_for('my_projects') }}">my work</a>
-            <span style="background:#FFB347;color:#1e3a5f;padding:0.3rem 0.8rem;border-radius:30px;font-weight:700;font-size:0.9rem;">⭐ {{ current_user.xp }} XP</span>
-            <a href="{{ url_for('logout') }}" class="btn-try"><i class="fas fa-sign-out-alt"></i> logout</a>
-            {% if current_user.role == 'admin' %}
-                <a href="{{ url_for('admin') }}" class="btn-try" style="background:#FFB347!important">admin</a>
-            {% endif %}
-        {% else %}
-            <a href="{{ url_for('login') }}" class="btn-try"><i class="fas fa-sign-in-alt"></i> login</a>
-            <a href="{{ url_for('signup') }}" class="btn-try" style="background:#5D9BEC!important">sign up</a>
+        <span class="nav-badge xp"><i class="fas fa-bolt"></i> {{ current_user.xp }}</span>
+        {% if current_user.streak_days >= 1 %}
+          <span class="nav-badge streak" title="Ship Streak"><i class="fas fa-fire"></i> {{ current_user.streak_days }}</span>
         {% endif %}
-    </div>
+        {% if current_user.role == 'admin' %}
+          <a href="{{ url_for('admin') }}" class="btn-nav primary">Admin</a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}" class="btn-nav ghost">Sign out</a>
+      </div>
+    {% else %}
+      <a href="{{ url_for('login') }}"  class="btn-nav ghost">Login</a>
+      <a href="{{ url_for('signup') }}" class="btn-nav primary">Sign Up Free</a>
+    {% endif %}
+    <button type="button" id="soundToggle" class="sound-toggle" title="Sound effects on"><i class="fas fa-volume-high"></i></button>
+  </div>
+
+  <!-- Mobile hamburger -->
+  <button type="button" class="nav-toggle" id="navToggle" aria-label="Open menu">
+    <i class="fas fa-bars"></i>
+  </button>
 </nav>
 
-{% with messages = get_flashed_messages() %}
-    {% if messages %}
-        <div class="flash-messages" style="max-width: 600px; margin: 1rem auto 0; padding: 0 1rem;">
-            {% for message in messages %}
-                <div style="background: #FFE6B0; padding: 0.8rem 1.2rem; border-radius: 30px; text-align: center; border-left: 5px solid #FFB347; margin-bottom: 0.5rem; color: #1e2a3e; font-weight: 500;">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        </div>
+<!-- Mobile menu overlay -->
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-menu-header">
+    <span class="logo-text">Nexa<span>Pals</span></span>
+    <button type="button" class="nav-toggle" id="navClose" aria-label="Close menu">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+  <div class="mobile-menu-links">
+    <a href="{{ url_for('learn') }}"       {% if request.endpoint == 'learn' %}class="active"{% endif %}><i class="fas fa-book-open"></i> Learn</a>
+    <a href="{{ url_for('games') }}"       {% if request.endpoint == 'games' %}class="active"{% endif %}><i class="fas fa-gamepad"></i> Games</a>
+    <a href="{{ url_for('play') }}"        {% if request.endpoint in ['play','play_project'] %}class="active"{% endif %}><i class="fas fa-bolt"></i> Play</a>
+    <a href="{{ url_for('create') }}"      {% if request.endpoint == 'create' %}class="active"{% endif %}><i class="fas fa-wand-magic-sparkles"></i> Create</a>
+    <a href="{{ url_for('leaderboard') }}" {% if request.endpoint == 'leaderboard' %}class="active"{% endif %}><i class="fas fa-trophy"></i> Ranks</a>
+    <a href="{{ url_for('about') }}"       {% if request.endpoint == 'about' %}class="active"{% endif %}><i class="fas fa-info-circle"></i> About</a>
+  </div>
+  {% if current_user.is_authenticated %}
+  <div class="mobile-menu-user">
+    <a href="{{ url_for('profile') }}" class="mobile-user-row">
+      <i class="fas {{ current_user.avatar }}"></i>
+      <div>
+        <strong>{{ current_user.username }}</strong>
+        <span>{{ current_user.level.name }} · {{ current_user.xp }} XP</span>
+      </div>
+    </a>
+    {% if current_user.streak_days >= 1 %}
+    <div class="mobile-streak"><i class="fas fa-fire"></i> {{ current_user.streak_days }} day streak</div>
     {% endif %}
+    {% if current_user.role == 'admin' %}
+    <a href="{{ url_for('admin') }}" class="btn btn-yellow" style="width:100%;margin-top:0.5rem;">Admin</a>
+    {% endif %}
+    <a href="{{ url_for('logout') }}" class="btn btn-ghost" style="width:100%;margin-top:0.5rem;">Sign out</a>
+  </div>
+  {% else %}
+  <div class="mobile-menu-auth">
+    <a href="{{ url_for('login') }}" class="btn btn-ghost" style="width:100%;">Login</a>
+    <a href="{{ url_for('signup') }}" class="btn btn-yellow" style="width:100%;">Sign Up Free</a>
+  </div>
+  {% endif %}
+</div>
+<div class="mobile-menu-backdrop" id="mobileBackdrop"></div>
+
+<!-- ── FLASH MESSAGES ─────────────────────────────────── -->
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div class="flash-wrap">
+      {% for message in messages %}
+        <div class="flash-msg"><i class="fas fa-circle-info"></i> {{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
 {% endwith %}
 
+{% if current_user.is_authenticated and current_user.is_minor and not current_user.parent_verified %}
+<div style="background:#fff3e0;border-bottom:2px solid #FFB347;padding:0.6rem 1rem;text-align:center;font-size:0.85rem;color:#6c4a1a;">
+  <i class="fas fa-envelope"></i> We've emailed your parent or guardian to confirm this account — everything still works while you wait.
+</div>
+{% endif %}
+
+<main id="main" tabindex="-1">
 {% block content %}{% endblock %}
+</main>
 
-<footer style="background:#1e2a3e; color:#c5d5e8; padding:3rem 2rem 1.5rem; margin-top:2rem;">
-  <div style="max-width:1100px; margin:0 auto; display:flex; flex-wrap:wrap; gap:2.5rem; justify-content:space-between;">
+<!-- ── FOOTER ─────────────────────────────────────────── -->
+<footer style="background:#0f1a2e;color:var(--mist);padding:3rem 2rem 1.5rem;border-top:1px solid rgba(255,179,71,0.1);">
+  <div class="container" style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:2.5rem;flex-wrap:wrap;">
 
-    <!-- Brand -->
-    <div style="min-width:200px; max-width:280px;">
-      <div style="display:flex; align-items:center; gap:0.7rem; margin-bottom:0.8rem;">
-        <img src="{{ url_for('static', filename='images/NexaLogo.png') }}" alt="Nexa Pals" style="width:40px; height:40px; border-radius:50%; object-fit:contain;">
-        <span style="font-size:1.4rem; font-weight:800; color:white;">Nexa <span style="color:#FFB347;">Pals</span></span>
+    <div>
+      <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.9rem;">
+        <img src="{{ url_for('static', filename='images/mascot_icon.png') }}" alt="" style="width:34px;height:34px;border-radius:50%;object-fit:cover;">
+        <span style="font-size:1.2rem;font-weight:800;color:var(--white);">Nexa<span style="color:var(--yellow);">Pals</span></span>
       </div>
-      <p style="font-size:0.88rem; line-height:1.7; margin:0 0 1rem;">
-        Free coding education for South African kids aged 10+. Learn HTML, CSS &amp; JavaScript through games, projects, and AI-powered tutoring.
-      </p>
-      <a href="mailto:info@nexapals.co.za" style="color:#FFB347; font-weight:700; font-size:0.9rem; text-decoration:none;">
-        <i class="fas fa-envelope"></i> info@nexapals.co.za
-      </a>
+      <p style="font-size:0.85rem;line-height:1.7;margin-bottom:1rem;max-width:240px;">Free coding education for South African kids 10+. Learn HTML, CSS &amp; JS through games, AI tutoring, and live projects.</p>
+      <a href="mailto:info@nexapals.co.za" style="color:var(--yellow);font-weight:700;font-size:0.85rem;text-decoration:none;">info@nexapals.co.za</a>
     </div>
 
-    <!-- Learn -->
-    <div style="min-width:140px;">
-      <h4 style="color:white; margin:0 0 1rem; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.05em;">Learn</h4>
-      <div style="display:flex; flex-direction:column; gap:0.5rem;">
-        <a href="{{ url_for('learn') }}" style="color:#c5d5e8; text-decoration:none; font-size:0.88rem;" onmouseover="this.style.color='#FFB347'" onmouseout="this.style.color='#c5d5e8'">📚 All Lessons</a>
-        <a href="{{ url_for('learn') }}#html" style="color:#c5d5e8; text-decoration:none; font-size:0.88rem;" onmouseover="this.style.color='#FFB347'" onmouseout="this.style.color='#c5d5e8'">🏗️ HTML Track</a>
-        <a href="{{ url_for('learn') }}#css" style="color:#c5d5e8; text-decoration:none; font-size:0.88rem;" onmouseover="this.style.color='#FFB347'" onmouseout="this.style.color='#c5d5e8'">🎨 CSS Track</a>
-        <a href="{{ url_for('learn') }}#javascript" style="color:#c5d5e8; text-decoration:none; font-size:0.88rem;" onmouseover="this.style.color='#FFB347'" onmouseout="this.style.color='#c5d5e8'">⚡ JavaScript Track</a>
-        <a href="{{ url_for('games') }}" style="color:#c5d5e8; text-decoration:none; font-size:0.88rem;" onmouseover="this.style.color='#FFB347'" onmouseout="this.style.color='#c5d5e8'">🎮 Games</a>
-      </div>
+    {% for col_title, links in [
+      ('Learn', [
+        ('All Lessons', url_for('learn')),
+        ('HTML Track',  url_for('learn')),
+        ('CSS Track',   url_for('learn')),
+        ('JS Track',    url_for('learn')),
+        ('Games',       url_for('games')),
+      ]),
+      ('Build', [
+        ('Playground', url_for('play')),
+        ('Templates',  url_for('create')),
+        ('Leaderboard',url_for('leaderboard')),
+        ('For Teachers', url_for('teacher_dashboard') if current_user.is_authenticated else url_for('login')),
+      ]),
+      ('Company', [
+        ('About',   url_for('about')),
+        ('Contact', url_for('contact')),
+        ('Privacy Policy', url_for('privacy')),
+        ('Terms of Service', url_for('terms')),
+      ]),
+    ] %}
+    <div>
+      <div style="color:var(--white);font-weight:700;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.8rem;">{{ col_title }}</div>
+      {% for label, href in links %}
+        <a href="{{ href }}" style="display:block;color:var(--mist);text-decoration:none;font-size:0.85rem;margin-bottom:0.4rem;transition:color 0.15s;" onmouseover="this.style.color='var(--yellow)'" onmouseout="this.style.color='var(--mist)'">{{ label }}</a>
+      {% endfor %}
     </div>
-
-    <!-- Build -->
-    <div style="min-width:140px;">
-      <h4 style="color:white; margin:0 0 1rem; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.05em;">Build</h4>
-      <div style="display:flex; flex-direction:column; gap:0.5rem;">
-        <a href="{{ url_for('play') }}" style="color:#c5d5e8; text-decoration:none; font-size:0.88rem;" onmouseover="this.style.color='#FFB347'" onmouseout="this.style.color='#c5d5e8'">🛝 Playground</a>
-        <a href="{{ url_for('create') }}" style="color:#c5d5e8; text-decoration:none; font-size:0.88rem;" onmouseover="this.style.color='#FFB347'" onmouseout="this.style.color='#c5d5e8'">✨ Templates</a>
-        {% if current_user.is_authenticated %}
-        <a href="{{ url_for('my_projects') }}" style="color:#c5d5e8; text-decoration:none; font-size:0.88rem;" onmouseover="this.style.color='#FFB347'" onmouseout="this.style.color='#c5d5e8'">📁 My Projects</a>
-        {% endif %}
-        <a href="{{ url_for('buddies') }}" style="color:#c5d5e8; text-decoration:none; font-size:0.88rem;" onmouseover="this.style.color='#FFB347'" onmouseout="this.style.color='#c5d5e8'">👥 Pals</a>
-      </div>
-    </div>
-
-    <!-- Company -->
-    <div style="min-width:140px;">
-      <h4 style="color:white; margin:0 0 1rem; font-size:0.95rem; text-transform:uppercase; letter-spacing:0.05em;">Company</h4>
-      <div style="display:flex; flex-direction:column; gap:0.5rem;">
-        <a href="{{ url_for('about') }}" style="color:#c5d5e8; text-decoration:none; font-size:0.88rem;" onmouseover="this.style.color='#FFB347'" onmouseout="this.style.color='#c5d5e8'">🌍 About Us</a>
-        <a href="{{ url_for('contact') }}" style="color:#c5d5e8; text-decoration:none; font-size:0.88rem;" onmouseover="this.style.color='#FFB347'" onmouseout="this.style.color='#c5d5e8'">✉️ Contact</a>
-        <a href="mailto:info@nexapals.co.za?subject=School Partnership" style="color:#c5d5e8; text-decoration:none; font-size:0.88rem;" onmouseover="this.style.color='#FFB347'" onmouseout="this.style.color='#c5d5e8'">🏫 Schools</a>
-        {% if not current_user.is_authenticated %}
-        <a href="{{ url_for('signup') }}" style="color:#FFB347; text-decoration:none; font-size:0.88rem; font-weight:700;">🚀 Sign Up Free</a>
-        {% endif %}
-      </div>
-    </div>
+    {% endfor %}
 
   </div>
 
-  <!-- Bottom bar -->
-  <div style="max-width:1100px; margin:2rem auto 0; padding-top:1.5rem; border-top:1px solid #2d3f5a; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
-    <p style="margin:0; font-size:0.82rem; color:#6c757d;">
-      © 2026 Nexa Pals · Built with 💛 at the University of the Free State · Bloemfontein, South Africa
-    </p>
-    <div style="display:flex; gap:1rem;">
-      <a href="mailto:info@nexapals.co.za" style="color:#6c757d; font-size:1.1rem;" title="Email us" onmouseover="this.style.color='#FFB347'" onmouseout="this.style.color='#6c757d'"><i class="fas fa-envelope"></i></a>
-      <a href="#" style="color:#6c757d; font-size:1.1rem;" title="YouTube" onmouseover="this.style.color='#FF0000'" onmouseout="this.style.color='#6c757d'"><i class="fab fa-youtube"></i></a>
-      <a href="#" style="color:#6c757d; font-size:1.1rem;" title="Instagram" onmouseover="this.style.color='#E1306C'" onmouseout="this.style.color='#6c757d'"><i class="fab fa-instagram"></i></a>
-      <a href="#" style="color:#6c757d; font-size:1.1rem;" title="TikTok" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6c757d'"><i class="fab fa-tiktok"></i></a>
+  <div class="divider-dark" style="margin-top:2rem;"></div>
+
+  <div class="container" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+    <p style="font-size:0.78rem;color:#4a627a;">© 2026 Nexa Pals — Built at the University of the Free State, Bloemfontein, South Africa</p>
+    <div style="display:flex;gap:1rem;">
+      <a href="mailto:info@nexapals.co.za" style="color:#4a627a;transition:color 0.15s;" onmouseover="this.style.color='var(--yellow)'" onmouseout="this.style.color='#4a627a'"><i class="fas fa-envelope"></i></a>
+      <a href="#" style="color:#4a627a;transition:color 0.15s;" onmouseover="this.style.color='#ff0000'" onmouseout="this.style.color='#4a627a'"><i class="fab fa-youtube"></i></a>
+      <a href="#" style="color:#4a627a;transition:color 0.15s;" onmouseover="this.style.color='#e1306c'" onmouseout="this.style.color='#4a627a'"><i class="fab fa-instagram"></i></a>
+      <a href="#" style="color:#4a627a;transition:color 0.15s;" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='#4a627a'"><i class="fab fa-tiktok"></i></a>
     </div>
   </div>
 </footer>
 
-<div class="message-popup" id="messagePopup"></div>
+<!-- ── TOASTS ──────────────────────────────────────────── -->
+<div id="xpToast">
+  <span class="xp-num" id="xpNum">+10</span>
+  <span id="xpMsg">XP earned!</span>
+</div>
+<div id="messagePopup" class="message-popup"></div>
+
+<script src="{{ url_for('static', filename='js/sounds.js') }}"></script>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+(function () {
+  // Sound toggle
+  const btn = document.getElementById('soundToggle');
+  if (btn && window.NexaSound) {
+    function render() {
+      const on = window.NexaSound.enabled();
+      btn.innerHTML = '<i class="fas ' + (on ? 'fa-volume-high' : 'fa-volume-xmark') + '"></i>';
+      btn.title = on ? 'Sound effects on — click to mute' : 'Sound effects off — click to unmute';
+      btn.classList.toggle('muted', !on);
+    }
+    btn.addEventListener('click', function () {
+      window.NexaSound.setEnabled(!window.NexaSound.enabled());
+      render();
+      if (window.NexaSound.enabled()) window.NexaSound.click();
+    });
+    render();
+  }
+
+  // Mobile menu
+  const toggle = document.getElementById('navToggle');
+  const closeBtn = document.getElementById('navClose');
+  const menu = document.getElementById('mobileMenu');
+  const backdrop = document.getElementById('mobileBackdrop');
+  function openMenu() {
+    menu.classList.add('open');
+    backdrop.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeMenu() {
+    menu.classList.remove('open');
+    backdrop.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  if (toggle) toggle.addEventListener('click', openMenu);
+  if (closeBtn) closeBtn.addEventListener('click', closeMenu);
+  if (backdrop) backdrop.addEventListener('click', closeMenu);
+})();
+</script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

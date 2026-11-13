@@ -1,76 +1,184 @@
 {% extends "base.html" %}
-{% block title %}Learn to Code{% endblock %}
+{% block title %}Your Coding Journey{% endblock %}
 
 {% block content %}
-<div class="hero" style="background: linear-gradient(135deg, #E6F0FF, #FFF3E0);">
-  <div class="hero-text">
-    <h1>📚 <span>Learn to Code</span></h1>
-    <p>Step-by-step lessons, quizzes, and XP rewards. Start from zero, become a hero!</p>
+
+<!-- ══ JOURNEY HEADER ═══════════════════════════════════════════ -->
+<section class="journey-header">
+  <div class="journey-header-inner">
+    <div class="journey-intro">
+      <span class="section-label"><i class="fas fa-map"></i> Learning Path</span>
+      <h1>Your Coding Journey</h1>
+      <p>Every lesson makes you stronger. Keep going — you're building real skills.</p>
+    </div>
+
     {% if current_user.is_authenticated %}
-      <div style="margin-top:1rem; display:flex; gap:1rem; flex-wrap:wrap;">
-        <div style="background:white; border-radius:30px; padding:0.5rem 1.2rem; border:3px solid #FFB347; font-weight:700; color:#1e5f4b;">
-          ⚡ {{ current_user.xp }} XP
-        </div>
-        <div style="background:white; border-radius:30px; padding:0.5rem 1.2rem; border:3px solid #9B7EDE; font-weight:700; color:#6B4F9E;">
-          ✅ {{ completed }}/{{ total_lessons }} completed
+    <div class="journey-progress-card">
+      <div class="jpc-level">
+        <div class="jpc-badge"><i class="fas fa-star"></i></div>
+        <div>
+          <div class="jpc-label">Current Level</div>
+          <div class="jpc-name">{{ current_user.level.name }}</div>
         </div>
       </div>
+      <div class="jpc-bar-wrap">
+        <div class="prog-bar-wrap light">
+          <div class="prog-bar-fill" style="width:{{ current_user.level_progress_pct }}%;"></div>
+        </div>
+        <div class="jpc-meta">
+          <span>{{ current_user.xp }} XP</span>
+          {% if current_user.level.next_xp %}
+          <span>{{ current_user.level.next_xp - current_user.xp }} XP to next level</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="jpc-stats">
+        <div class="jpc-stat">
+          <strong>{{ completed }}/{{ total_lessons }}</strong>
+          <span>Lessons</span>
+        </div>
+        {% if current_user.streak_days >= 1 %}
+        <div class="jpc-stat">
+          <strong><i class="fas fa-fire"></i> {{ current_user.streak_days }}</strong>
+          <span>Streak</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <div class="journey-cta-card">
+      <p>Sign up free to track your progress and unlock the full journey.</p>
+      <a href="{{ url_for('signup') }}" class="btn btn-yellow"><i class="fas fa-rocket"></i> Start for Free</a>
+    </div>
     {% endif %}
   </div>
-  <div class="hero-avatar" style="background:#5D9BEC;"><i class="fas fa-graduation-cap"></i></div>
-</div>
-
-{% set track_meta = {
-  'html': {'label':'HTML', 'emoji':'🏗️', 'color':'#5D9BEC', 'shadow':'#3A6EA5', 'desc':'Build the structure of every webpage'},
-  'css':  {'label':'CSS',  'emoji':'🎨', 'color':'#FFB347', 'shadow':'#C17D2E', 'desc':'Make your pages beautiful with style'},
-  'javascript': {'label':'JavaScript', 'emoji':'⚡', 'color':'#9B7EDE', 'shadow':'#6B4F9E', 'desc':'Bring your pages to life with code'}
-} %}
-
-{% for track_key, lesson_pairs in tracks.items() %}
-{% set m = track_meta[track_key] %}
-<section style="padding:2.5rem 2rem; {% if loop.index % 2 == 0 %}background:#f0f5ff{% else %}background:white{% endif %};">
-  <h2 class="section-title">
-    <span>{{ m.emoji }} {{ m.label }} Track</span>
-    <small style="font-size:0.7rem; font-weight:500; color:#6c757d; display:block; margin-top:0.3rem;">{{ m.desc }}</small>
-  </h2>
-
-  <div style="display:flex; flex-wrap:wrap; gap:1.2rem; justify-content:center; margin-top:1.5rem;">
-    {% for lesson_obj, prog in lesson_pairs %}
-    {% set done = prog and prog.completed %}
-    <a href="{% if current_user.is_authenticated %}{{ url_for('lesson', track=track_key, lesson_id=lesson_obj.id) }}{% else %}{{ url_for('login') }}{% endif %}"
-       style="text-decoration:none; width:220px;">
-      <div style="background:white; border-radius:28px; padding:1.4rem; border:4px solid {{ m.color }}; box-shadow:0 8px 0 {{ m.shadow }}; transition:0.2s; position:relative; height:100%; {% if done %}opacity:0.85{% endif %}"
-           onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
-        {% if done %}
-          <div style="position:absolute; top:-10px; right:-10px; background:#1e5f4b; color:white; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; font-size:0.9rem;">✓</div>
-        {% endif %}
-        <div style="font-size:2rem; margin-bottom:0.5rem;">
-          {% if done %}✅{% else %}📖{% endif %}
-        </div>
-        <h4 style="margin:0 0 0.5rem; color:#1e3a5f; font-size:1rem;">{{ lesson_obj.title }}</h4>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.8rem;">
-          <span style="font-size:0.75rem; background:{{ m.color }}22; color:{{ m.color }}; padding:0.2rem 0.7rem; border-radius:20px; font-weight:700;">
-            Lesson {{ lesson_obj.order }}
-          </span>
-          <span style="font-size:0.75rem; color:#FFB347; font-weight:700;">⚡ {{ lesson_obj.xp_reward }} XP</span>
-        </div>
-        {% if prog and prog.score %}
-          <div style="margin-top:0.6rem; background:#e9ecef; border-radius:20px; height:6px;">
-            <div style="width:{{ prog.score }}%; background:#1e5f4b; border-radius:20px; height:6px;"></div>
-          </div>
-          <div style="font-size:0.72rem; color:#1e5f4b; margin-top:0.3rem; font-weight:600;">Quiz: {{ prog.score }}%</div>
-        {% endif %}
-      </div>
-    </a>
-    {% endfor %}
-  </div>
 </section>
-{% endfor %}
 
-{% if not current_user.is_authenticated %}
-<div class="cta" style="background:#FFB347; border:none;">
-  <h2 style="color:#1e2a3e;">🔐 Log in to track your progress!</h2>
-  <a href="{{ url_for('login') }}" class="big-btn" style="background:white; color:#1e5f4b; text-decoration:none; display:inline-block;">Login / Sign Up →</a>
+{% if completed == 0 %}
+<div style="max-width:1000px;margin:1rem auto 0;padding:0 1.2rem;">
+  <a href="{{ url_for('start_here') }}" style="display:flex;align-items:center;gap:.9rem;background:linear-gradient(135deg,#6c4bb8,#2f6fc0);color:#fff;border-radius:20px;padding:1rem 1.3rem;text-decoration:none;">
+    <i class="fas fa-seedling" style="font-size:1.8rem;"></i>
+    <span><strong style="font-size:1.1rem;">New to coding? Start here</strong><br><span style="opacity:.95;font-size:.9rem;">A 5 minute hands-on introduction. No experience needed.</span></span>
+    <i class="fas fa-arrow-right" style="margin-left:auto;"></i>
+  </a>
 </div>
 {% endif %}
+
+{% if current_user.is_authenticated %}
+<div style="max-width:1000px;margin:1rem auto 0;padding:0 1.2rem;display:flex;gap:.6rem;flex-wrap:wrap;">
+  <a href="{{ url_for('warmup') }}" class="big-btn" style="text-decoration:none;font-size:.9rem;padding:.5rem 1.1rem;"><i class="fas fa-bolt"></i> Daily warm-up</a>
+  <a href="{{ url_for('my_skills') }}" class="big-btn green" style="text-decoration:none;font-size:.9rem;padding:.5rem 1.1rem;"><i class="fas fa-chart-simple"></i> My skills</a>
+</div>
+{% endif %}
+
+
+{% set track_meta = {
+  'html':       {'label':'HTML',       'icon':'fa-code',     'color':'var(--blue)',   'desc':'Structure the web',     'accent':'#5D9BEC'},
+  'css':        {'label':'CSS',        'icon':'fa-palette',  'color':'var(--yellow)', 'desc':'Style & design',        'accent':'#FFB347'},
+  'javascript': {'label':'JavaScript', 'icon':'fa-bolt',     'color':'var(--purple)', 'desc':'Logic & interactivity', 'accent':'#9B7EDE'},
+} %}
+
+<!-- Find next incomplete lesson for Continue button -->
+{% set ns = namespace(next_lesson=None, next_track=None) %}
+{% for track_key, lesson_pairs in tracks.items() %}
+  {% for lesson_obj, prog in lesson_pairs %}
+    {% if not ns.next_lesson and not (prog and prog.completed) %}
+      {% set ns.next_lesson = lesson_obj %}
+      {% set ns.next_track = track_key %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+
+{% if current_user.is_authenticated and ns.next_lesson %}
+<div class="continue-bar">
+  <div class="continue-bar-inner">
+    <div class="continue-text">
+      <span class="continue-label">Up next</span>
+      <strong>{{ ns.next_lesson.title }}</strong>
+    </div>
+    <a href="{{ url_for('lesson', track=ns.next_track, lesson_id=ns.next_lesson.id) }}" class="btn btn-yellow btn-xl">
+      Continue Learning <i class="fas fa-arrow-right"></i>
+    </a>
+  </div>
+</div>
+{% endif %}
+
+<!-- ══ VISUAL PATHS ═════════════════════════════════════════════ -->
+<section class="paths-section">
+  <div class="container-sm">
+
+    {% for track_key, lesson_pairs in tracks.items() %}
+    {% set m = track_meta[track_key] %}
+    <div class="path-track" id="{{ track_key }}">
+      <div class="path-track-header">
+        <div class="path-icon" style="background:{{ m.accent }}22;color:{{ m.accent }};">
+          <i class="fas {{ m.icon }}"></i>
+        </div>
+        <div>
+          <h2>{{ m.label }}</h2>
+          <p>{{ m.desc }}</p>
+        </div>
+        <span class="path-count">{{ lesson_pairs|length }} lessons</span>
+      </div>
+
+      <div class="path-nodes">
+        {% for lesson_obj, prog in lesson_pairs %}
+        {% set done = prog and prog.completed %}
+        {% set is_current = (ns.next_lesson and ns.next_lesson.id == lesson_obj.id) %}
+        <a href="{% if current_user.is_authenticated %}{{ url_for('lesson', track=track_key, lesson_id=lesson_obj.id) }}{% else %}{{ url_for('login') }}{% endif %}"
+           class="path-node {% if done %}done{% elif is_current %}current{% elif not current_user.is_authenticated %}locked{% endif %}"
+           style="--node-color: {{ m.accent }};"
+           title="{{ lesson_obj.title }}">
+          <div class="node-circle">
+            {% if done %}
+              <i class="fas fa-check"></i>
+            {% elif not current_user.is_authenticated %}
+              <i class="fas fa-lock"></i>
+            {% else %}
+              {{ lesson_obj.order }}
+            {% endif %}
+          </div>
+          <div class="node-label">{{ lesson_obj.title }}</div>
+          {% if is_current %}
+            <div class="node-here">You are here</div>
+          {% endif %}
+          {% if done and prog and prog.score %}
+            <div class="node-score">{{ prog.score }}%</div>
+          {% endif %}
+        </a>
+        {% if not loop.last %}
+        <div class="path-connector {% if done %}filled{% endif %}" style="--node-color: {{ m.accent }};"></div>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+
+  </div>
+</section>
+
+<!-- Encouragement -->
+<div class="encourage-banner">
+  <div class="encourage-inner">
+    <img src="{{ url_for('static', filename='images/mascot_icon.png') }}" alt="" class="encourage-mascot">
+    <div>
+      <strong>Small steps. Big skills.</strong>
+      <p>You're becoming a stronger coder every day. Keep going — we've got you.</p>
+    </div>
+  </div>
+</div>
+
+{% if not current_user.is_authenticated %}
+<section class="cta-section">
+  <div class="container-sm" style="position:relative;z-index:1;text-align:center;">
+    <h2 style="color:var(--white);margin-bottom:0.5rem;">Ready to start your journey?</h2>
+    <p style="color:var(--mist);margin-bottom:1.5rem;">Sign up free — track progress, earn XP, and level up.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+      <a href="{{ url_for('signup') }}" class="btn btn-yellow"><i class="fas fa-rocket"></i> Sign Up Free</a>
+      <a href="{{ url_for('login') }}" class="btn btn-ghost" style="color:var(--white);border-color:rgba(255,255,255,0.25);">Login</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
 {% endblock %}

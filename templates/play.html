@@ -2,65 +2,70 @@
 {% block title %}Playground{% endblock %}
 
 {% block content %}
-<div class="hero" style="padding: 1rem 2rem;">
-    <h1>🎮 Code Playground</h1>
-    <p>Write HTML, CSS, and JavaScript – see live results instantly!</p>
+<div class="play-header">
+  <div class="play-header-inner">
+    <div>
+      <h1><i class="fas fa-bolt"></i> Code Playground</h1>
+      <p>Type code on the left — see it come alive on the right.</p>
+    </div>
+    <div class="play-header-actions">
+      <button class="btn btn-yellow" onclick="runCode()"><i class="fas fa-play"></i> Run</button>
+      <button class="btn btn-blue" onclick="saveProject()"><i class="fas fa-floppy-disk"></i> Save</button>
+    </div>
+  </div>
 </div>
 
-<div style="display:flex; flex-wrap:wrap; gap:1rem; padding:1.5rem; background:#f0f5ff; align-items:flex-start;">
+<div class="play-layout">
 
     <!-- ── Left: editors ── -->
-    <div style="flex:1; min-width:300px;">
+    <div class="play-editors">
 
         <!-- Tab bar -->
-        <div style="display:flex; gap:0.4rem; margin-bottom:0.5rem; flex-wrap:wrap;">
-            <button class="tab-btn active" onclick="switchTab('html')" id="tab-html" style="background:#FFB347; color:white; border:none; padding:0.4rem 1rem; border-radius:20px 20px 0 0; font-weight:700; cursor:pointer;">📝 HTML</button>
-            <button class="tab-btn" onclick="switchTab('css')" id="tab-css" style="background:#e9ecef; border:none; padding:0.4rem 1rem; border-radius:20px 20px 0 0; font-weight:700; cursor:pointer;">🎨 CSS</button>
-            <button class="tab-btn" onclick="switchTab('js')" id="tab-js" style="background:#e9ecef; border:none; padding:0.4rem 1rem; border-radius:20px 20px 0 0; font-weight:700; cursor:pointer;">⚡ JS</button>
+        <div class="play-tabs">
+            <button class="play-tab active" onclick="switchTab('html')" id="tab-html"><i class="fas fa-file-lines"></i> HTML</button>
+            <button class="play-tab" onclick="switchTab('css')" id="tab-css"><i class="fas fa-palette"></i> CSS</button>
+            <button class="play-tab" onclick="switchTab('js')" id="tab-js"><i class="fas fa-bolt"></i> JS</button>
         </div>
 
         <div style="position:relative;">
-            <textarea id="htmlEditor" rows="16" style="width:100%; font-family:monospace; font-size:0.88rem; padding:0.8rem; border-radius:0 16px 16px 16px; border:2px solid #FFB347; resize:vertical; display:block; box-sizing:border-box;">{{ active_project.html_code if active_project else '<h1>Hello, Nexa Pals!</h1>\n<p>Change this code and see the magic.</p>\n<button id="myBtn">Click Me! 🎉</button>' }}</textarea>
-            <textarea id="cssEditor"  rows="16" style="width:100%; font-family:monospace; font-size:0.88rem; padding:0.8rem; border-radius:0 16px 16px 16px; border:2px solid #FFB347; resize:vertical; display:none; box-sizing:border-box;">{{ active_project.css_code if active_project else 'h1 { color: #FFB347; font-family: sans-serif; }\nbutton {\n  background: #9B7EDE; color: white;\n  border: none; padding: 10px 20px;\n  border-radius: 30px; cursor: pointer;\n}\nbutton:hover { background: #7B5EC0; }' }}</textarea>
-            <textarea id="jsEditor"   rows="16" style="width:100%; font-family:monospace; font-size:0.88rem; padding:0.8rem; border-radius:0 16px 16px 16px; border:2px solid #FFB347; resize:vertical; display:none; box-sizing:border-box;">{{ active_project.js_code if active_project else "document.getElementById('myBtn')?.addEventListener('click', () => {\n    alert('You clicked the button! 🎉');\n});" }}</textarea>
+            <textarea id="htmlEditor" class="play-editor" rows="16">{{ active_project.html_code if active_project else '<h1>Hello, Nexa Pals!</h1>\n<p>Change this code and see the magic.</p>\n<button id="myBtn">Click Me!</button>' }}</textarea>
+            <textarea id="cssEditor"  class="play-editor" rows="16" style="display:none;">{{ active_project.css_code if active_project else 'h1 { color: #FFB347; font-family: sans-serif; }\nbutton {\n  background: #9B7EDE; color: white;\n  border: none; padding: 10px 20px;\n  border-radius: 30px; cursor: pointer;\n}\nbutton:hover { background: #7B5EC0; }' }}</textarea>
+            <textarea id="jsEditor"   class="play-editor" rows="16" style="display:none;">{{ active_project.js_code if active_project else "document.getElementById('myBtn')?.addEventListener('click', () => {\n    alert('You clicked the button!');\n});" }}</textarea>
 
-            <!-- Explain selection button (appears on mouseup) -->
             <button id="explainBtn" onclick="explainSelection()"
                     style="display:none; position:absolute; background:#9B7EDE; color:white; border:none; border-radius:20px; padding:0.3rem 0.8rem; font-size:0.8rem; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.2); z-index:10;">
-                🤖 Explain this
+                <i class="fas fa-robot"></i> Explain this
             </button>
         </div>
 
-        <!-- Action bar -->
-        <div style="margin:0.8rem 0; display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
-            <button class="big-btn" style="font-size:0.9rem; padding:0.5rem 1rem;" onclick="runCode()">▶ Run</button>
-            <button class="big-btn" style="font-size:0.9rem; padding:0.5rem 1rem; background:#5D9BEC;" onclick="saveProject()">💾 Save</button>
-            <button class="big-btn" style="font-size:0.9rem; padding:0.5rem 1rem; background:#9B7EDE;" onclick="startNewProject()">✨ New</button>
-            <button class="big-btn" style="font-size:0.9rem; padding:0.5rem 1rem; background:#e25c5c;" onclick="deleteCurrentProject()">🗑️ Delete</button>
+        <!-- Secondary actions -->
+        <div class="play-actions">
+            <button class="btn btn-sm btn-purple" onclick="startNewProject()"><i class="fas fa-plus"></i> New</button>
+            <button class="btn btn-sm btn-red" onclick="deleteCurrentProject()"><i class="fas fa-trash"></i> Delete</button>
+            <button class="btn btn-sm btn-yellow" onclick="runCode()" style="margin-left:auto;"><i class="fas fa-play"></i> Run</button>
         </div>
 
         <!-- Project row -->
-        <div style="display:flex; gap:0.6rem; flex-wrap:wrap; margin-bottom:0.5rem;">
-            <select id="projectSelect" style="padding:0.5rem; border-radius:30px; border:2px solid #FFB347;" onchange="loadProject()">
+        <div class="play-project-row">
+            <select id="projectSelect" onchange="loadProject()">
                 <option value="">-- Load saved project --</option>
                 {% for proj in user_projects %}
                 <option value="{{ proj.id }}" {% if active_project and active_project.id == proj.id %}selected{% endif %}>{{ proj.title }}</option>
                 {% endfor %}
             </select>
-            <input type="text" id="projectTitle" placeholder="Project title" value="{{ active_project.title if active_project else '' }}"
-                   style="padding:0.5rem; border-radius:30px; border:2px solid #FFB347; flex:1; min-width:140px;">
+            <input type="text" id="projectTitle" placeholder="Project title" value="{{ active_project.title if active_project else '' }}">
         </div>
         {% if user_projects %}
-        <p style="font-size:0.82rem; color:#4a627a; margin-bottom:0.5rem;">
+        <p class="play-projects-link">
             <i class="fas fa-folder-open"></i>
-            <a href="{{ url_for('my_projects') }}" style="color:#5D9BEC; font-weight:600;">All my projects ({{ user_projects|length }})</a>
+            <a href="{{ url_for('my_projects') }}">All my projects ({{ user_projects|length }})</a>
         </p>
         {% endif %}
 
         <!-- ── AI Code Helper ── -->
         <div id="aiHelperPanel" style="background:white; border:3px solid #9B7EDE; border-radius:20px; padding:1.2rem; margin-top:1rem;">
             <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.8rem;">
-                <span style="font-size:1.4rem;">🤖</span>
+                <span style="font-size:1.3rem;color:#9B7EDE;"><i class="fas fa-robot"></i></span>
                 <strong style="color:#6B4F9E; font-size:1rem;">AI Code Helper</strong>
                 <span style="font-size:0.75rem; background:#9B7EDE22; color:#6B4F9E; padding:0.15rem 0.6rem; border-radius:20px;">Ask anything about your code</span>
             </div>
@@ -71,7 +76,7 @@
                        onkeydown="if(event.key==='Enter') askAI()">
                 <button onclick="askAI()" id="aiHelperBtn"
                         style="background:#9B7EDE; color:white; border:none; border-radius:30px; padding:0.5rem 1rem; font-weight:700; cursor:pointer; white-space:nowrap;">
-                    Ask →
+                    Ask
                 </button>
             </div>
         </div>
@@ -79,9 +84,9 @@
         <!-- ── AI Code Explainer result panel ── -->
         <div id="aiExplainPanel" style="display:none; background:white; border:3px solid #5D9BEC; border-radius:20px; padding:1.2rem; margin-top:0.8rem;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.7rem;">
-                <strong style="color:#3A6EA5;">🔍 Code Explanation</strong>
+                <strong style="color:#3A6EA5;"><i class="fas fa-magnifying-glass"></i> Code Explanation</strong>
                 <button onclick="document.getElementById('aiExplainPanel').style.display='none'"
-                        style="background:none; border:none; cursor:pointer; color:#6c757d; font-size:1.1rem;">✕</button>
+                        style="background:none; border:none; cursor:pointer; color:#6c757d; font-size:1.1rem;"><i class="fas fa-xmark"></i></button>
             </div>
             <div id="aiExplainContent" style="font-size:0.88rem; line-height:1.6; white-space:pre-wrap; color:#1e3a5f;"></div>
         </div>
@@ -89,19 +94,22 @@
     </div>
 
     <!-- ── Right: preview ── -->
-    <div style="flex:1; min-width:300px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-            <strong style="font-size:1rem; color:#1e3a5f;">👀 Live Preview</strong>
-            <button onclick="runCode()" style="background:#1e5f4b; color:white; border:none; border-radius:20px; padding:0.3rem 0.8rem; font-size:0.8rem; cursor:pointer;">🔄 Refresh</button>
+    <div class="play-preview-panel">
+        <div class="play-preview-label">
+            <span><i class="fas fa-eye"></i> Live Preview</span>
         </div>
-        <iframe id="preview" style="width:100%; height:560px; border:3px solid #FFB347; border-radius:20px; background:white;"></iframe>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;display:none;">
+            <strong style="font-size:1rem; color:#1e3a5f;"><i class="fas fa-eye"></i> Live Preview</strong>
+            <button onclick="runCode()" style="background:#1e5f4b; color:white; border:none; border-radius:20px; padding:0.3rem 0.8rem; font-size:0.8rem; cursor:pointer;"><i class="fas fa-rotate-right"></i> Refresh</button>
+        </div>
+        <iframe id="preview" sandbox="allow-scripts" style="width:100%; height:560px; border:3px solid #FFB347; border-radius:20px; background:white;"></iframe>
 
         <!-- ── AI Project Ideas / Generator ── -->
         <div style="background:white; border:3px solid #FFB347; border-radius:20px; padding:1.2rem; margin-top:1rem;">
             <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.8rem;">
-                <span style="font-size:1.4rem;">✨</span>
+                <span style="font-size:1.3rem;color:#FFB347;"><i class="fas fa-wand-magic-sparkles"></i></span>
                 <strong style="color:#C17D2E; font-size:1rem;">AI Project Generator</strong>
-                <span style="font-size:0.75rem; background:#FFB34722; color:#C17D2E; padding:0.15rem 0.6rem; border-radius:20px;">Describe it → AI writes the code</span>
+                <span style="font-size:0.75rem; background:#FFB34722; color:#C17D2E; padding:0.15rem 0.6rem; border-radius:20px;">Describe it — AI builds a starter, you finish it</span>
             </div>
             <div style="display:flex; gap:0.5rem;">
                 <input type="text" id="aiGenInput" placeholder="e.g. A quiz about animals with 3 questions"
@@ -109,10 +117,15 @@
                        onkeydown="if(event.key==='Enter') generateProject()">
                 <button onclick="generateProject()" id="aiGenBtn"
                         style="background:#FFB347; color:#1e2a3e; border:none; border-radius:30px; padding:0.5rem 1rem; font-weight:700; cursor:pointer; white-space:nowrap;">
-                    Generate ✨
+                    Generate
                 </button>
             </div>
             <div id="aiGenStatus" style="display:none; margin-top:0.6rem; font-size:0.82rem; color:#6B4F9E; font-style:italic;"></div>
+            <div id="aiGenTodo" style="display:none; margin-top:0.8rem; background:#fff3e0; border:2px solid #FFB347; border-radius:14px; padding:0.8rem 1rem;">
+                <div style="font-weight:700; color:#C17D2E; font-size:0.85rem;"><i class="fas fa-pen"></i> Your turn</div>
+                <div id="aiGenTodoText" style="font-size:0.85rem; color:#5a4224; margin-top:0.3rem;"></div>
+                <div id="aiGenHintText" style="font-size:0.8rem; color:#8a7355; margin-top:0.4rem; font-style:italic;"></div>
+            </div>
         </div>
     </div>
 
@@ -129,6 +142,8 @@
 .ai-bubble.bot  { background:#f0f5ff;  align-self:flex-start; color:#1e3a5f;  border-bottom-left-radius:4px; }
 .ai-bubble.error{ background:#f8d7da;  color:#721c24; }
 .ai-bubble.thinking { color:#9B7EDE; font-style:italic; }
+.ai-row { display:flex; align-items:flex-end; gap:0.5rem; align-self:flex-start; max-width:100%; }
+.ai-avatar { width:26px; height:26px; border-radius:50%; object-fit:cover; background:#1e2a3e; flex-shrink:0; border:1.5px solid #9B7EDE55; }
 </style>
 
 <script>
@@ -171,7 +186,7 @@ async function explainSelection() {
     const panel = document.getElementById('aiExplainPanel');
     const content = document.getElementById('aiExplainContent');
     panel.style.display = 'block';
-    content.textContent = '🤖 Thinking…';
+    content.textContent = 'Thinking...';
 
     const meta = document.querySelector('meta[name="csrf-token"]');
     try {
@@ -181,8 +196,8 @@ async function explainSelection() {
             body: JSON.stringify({ code: sel, lang: activeTab === 'js' ? 'javascript' : activeTab })
         });
         const data = await res.json();
-        content.textContent = data.success ? data.reply : ('❌ ' + data.message);
-    } catch { content.textContent = '❌ Network error. Please try again.'; }
+        content.textContent = data.success ? data.reply : data.message;
+    } catch { content.textContent = 'Network error. Please try again.'; }
 }
 
 // ── AI Code Helper ─────────────────────────────────────────────────────────
@@ -191,7 +206,19 @@ function addBubble(text, type) {
     const d = document.createElement('div');
     d.className = 'ai-bubble ' + type;
     d.textContent = text;
-    helperChat.appendChild(d);
+    if (type.split(' ')[0] === 'bot') {
+        const row = document.createElement('div');
+        row.className = 'ai-row';
+        const avatar = document.createElement('img');
+        avatar.src = '{{ url_for("static", filename="images/mascot_icon.png") }}';
+        avatar.alt = '';
+        avatar.className = 'ai-avatar';
+        row.appendChild(avatar);
+        row.appendChild(d);
+        helperChat.appendChild(row);
+    } else {
+        helperChat.appendChild(d);
+    }
     helperChat.scrollTop = helperChat.scrollHeight;
     return d;
 }
@@ -203,7 +230,7 @@ async function askAI() {
     if (!q) return;
     input.value = '';
     addBubble(q, 'user');
-    const thinking = addBubble('🤖 Thinking…', 'bot thinking');
+    const thinking = addBubble('Thinking...', 'bot thinking');
     btn.disabled = true;
 
     const meta = document.querySelector('meta[name="csrf-token"]');
@@ -219,11 +246,11 @@ async function askAI() {
             })
         });
         const data = await res.json();
-        thinking.textContent = data.success ? data.reply : ('❌ ' + data.message);
+        thinking.textContent = data.success ? data.reply : data.message;
         thinking.classList.remove('thinking');
         if (!data.success) thinking.classList.add('error');
     } catch {
-        thinking.textContent = '❌ Network error. Please try again.';
+        thinking.textContent = 'Network error. Please try again.';
         thinking.classList.remove('thinking');
         thinking.classList.add('error');
     }
@@ -240,9 +267,9 @@ async function generateProject() {
     if (!idea) { input.focus(); return; }
 
     btn.disabled = true;
-    btn.textContent = '⏳ Generating…';
+    btn.textContent = 'Generating…';
     status.style.display = 'block';
-    status.textContent = '🤖 AI is writing your project code — this takes about 10 seconds…';
+    status.textContent = 'AI is writing your project code — this takes about 10 seconds...';
 
     const meta = document.querySelector('meta[name="csrf-token"]');
     try {
@@ -258,18 +285,26 @@ async function generateProject() {
             document.getElementById('jsEditor').value   = data.js;
             document.getElementById('projectTitle').value = data.title;
             window.currentProjectId = null;
-            switchTab('html');
+            switchTab('js');
             runCode();
-            status.textContent = `✅ "${data.title}" generated! Check the preview, then Save it.`;
+            status.textContent = `"${data.title}" starter is ready — look for the TODO in the JS tab.`;
+            const todoBox = document.getElementById('aiGenTodo');
+            if (data.todo) {
+                document.getElementById('aiGenTodoText').textContent = data.todo;
+                document.getElementById('aiGenHintText').textContent = data.hint ? `Hint: ${data.hint}` : '';
+                todoBox.style.display = 'block';
+            } else {
+                todoBox.style.display = 'none';
+            }
             input.value = '';
         } else {
-            status.textContent = '❌ ' + data.message;
+            status.textContent = data.message;
         }
     } catch {
-        status.textContent = '❌ Network error. Please try again.';
+        status.textContent = 'Network error. Please try again.';
     }
     btn.disabled = false;
-    btn.textContent = 'Generate ✨';
+    btn.textContent = 'Generate';
 }
 
 // ── Template / project preload ────────────────────────────────────────────

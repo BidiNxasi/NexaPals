@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Terms of Service{% endblock %}
+
+{% block content %}
+<div style="max-width:760px;margin:2.5rem auto;padding:0 1.5rem;">
+  <h1 style="color:#1e3a5f;">Terms of Service</h1>
+  <p style="color:#6c757d;font-size:0.9rem;">Last updated: {{ policy_updated_date if policy_updated_date else '2026' }}</p>
+
+  <div style="background:#fff3e0;border:2px solid #FFB347;border-radius:16px;padding:1rem 1.2rem;margin-bottom:2rem;font-size:0.88rem;color:#6c4a1a;">
+    <i class="fas fa-triangle-exclamation"></i> This is a plain-language starting point, not a lawyer-reviewed
+    contract. Have it checked before relying on it for a real launch.
+  </div>
+
+  <h2>1. Who can use Nexa Pals</h2>
+  <p>
+    Nexa Pals is a free coding education site aimed at learners aged 10 and up. If you are under 18, you
+    confirmed at signup that a parent or guardian is aware of your account, and we email them to let them know.
+  </p>
+
+  <h2>2. Your account</h2>
+  <ul>
+    <li>Keep your password private — you're responsible for what happens on your account.</li>
+    <li>One account per person. Don't create accounts to spam the leaderboard or the AI tutor.</li>
+    <li>We can suspend or remove an account that breaks these terms, is used to harass others, or is used to try to bypass the AI tutor's safety rules.</li>
+  </ul>
+
+  <h2>3. What you build</h2>
+  <p>
+    Any code or project you write and save on Nexa Pals belongs to you. By saving a project, you let us store
+    and display it back to you, and — only if it's ever featured (e.g. in a testimonial or showcase) — we'll
+    always ask first.
+  </p>
+
+  <h2>4. Acceptable use</h2>
+  <p>Please don't use Nexa Pals to:</p>
+  <ul>
+    <li>Post or write code containing hateful, violent, sexual, or otherwise inappropriate content</li>
+    <li>Try to break, overload, or hack the site</li>
+    <li>Impersonate someone else</li>
+    <li>Use the AI tutor for anything outside learning to code — it's filtered for kid-appropriate, on-topic use</li>
+  </ul>
+
+  <h2>5. The AI tutor</h2>
+  <p>
+    The AI tutor, code explainer, and project generator are built to stay on-topic and age-appropriate, but AI
+    responses can occasionally be wrong or oddly worded — treat them as a helpful guide, not a source of truth,
+    and always feel free to ask a teacher or parent if something seems off.
+  </p>
+
+  <h2>6. No warranty</h2>
+  <p>
+    Nexa Pals is provided "as is." We do our best to keep it running and accurate, but we don't guarantee it
+    will always be available, error-free, or perfectly accurate, and we're not liable for any loss arising from
+    your use of the site.
+  </p>
+
+  <h2>7. Changes</h2>
+  <p>We may update these terms or the site's features over time. If we make a significant change, we'll update the date at the top of this page.</p>
+
+  <h2>8. Governing law</h2>
+  <p>These terms are governed by the laws of South Africa.</p>
+
+  <h2>9. Contact</h2>
+  <p>Questions about these terms? Email <strong>{{ contact_email if contact_email else 'info@nexapals.co.za' }}</strong> or use our <a href="{{ url_for('contact') }}">contact page</a>.</p>
+</div>
+{% endblock %}

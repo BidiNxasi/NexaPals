@@ -1,94 +1,15 @@
-// ========== NEXA PALS – COMPLETE INTERACTIVE JAVASCRIPT ==========
+// ========== NEXA PALS -- INTERACTIVE JAVASCRIPT ==========
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Elements
-    const messageBox = document.getElementById('messagePopup');
-    const buddyAvatar = document.getElementById('buddyAvatar');
-    const tryBtn = document.getElementById('tryBtn');
-    const startBtn = document.getElementById('startBtn');
-    const projectCounter = document.getElementById('projectCounter');
-    const countSpan = document.getElementById('countNumber');
-    const clickCounter = document.getElementById('clickCounter');
-    const testimonialBox = document.getElementById('testimonialBox');
+    // Elements that are actually present in the templates.
     const projectCards = document.querySelectorAll('.project-card');
     const featureCards = document.querySelectorAll('.feature-card');
-    const buddyCards = document.querySelectorAll('.buddy-card');
-    const socialIcons = document.querySelectorAll('.social-icons i');
-    
-    let projectCount = 150;
-    let clickCount = 0;
 
-    // Show popup message
-    window.showMessage = function(text, emoji = '✨') {
-        if (!messageBox) return;
-        messageBox.style.display = 'block';
-        messageBox.innerHTML = `${emoji} ${text} ${emoji}`;
-        setTimeout(() => {
-            messageBox.style.display = 'none';
-        }, 2000);
-    }
-
-    // Avatar click – random encouraging message
-    if (buddyAvatar) {
-        buddyAvatar.addEventListener('click', function() {
-            const messages = [
-                'Hey pal! Ready to code?',
-                'Let\'s make something awesome!',
-                'Coding is magic! ✨',
-                'You\'re the best pal ever!',
-                'I believe in you! 💪',
-                'What shall we build today?'
-            ];
-            const randomMsg = messages[Math.floor(Math.random() * messages.length)];
-            showMessage(randomMsg, '🤖');
-            this.style.transform = 'scale(1.2)';
-            setTimeout(() => this.style.transform = '', 300);
-        });
-    }
-
-    // Project counter click – add 5 projects
-    if (projectCounter && countSpan) {
-        projectCounter.addEventListener('click', function() {
-            projectCount += 5;
-            countSpan.textContent = projectCount;
-            showMessage(`🎉 ${projectCount}+ projects now!`, '🌟');
-            this.style.backgroundColor = '#FFB347';
-            setTimeout(() => this.style.backgroundColor = 'white', 200);
-        });
-    }
-
-    // Fun click counter
-    if (clickCounter) {
-        clickCounter.addEventListener('click', function() {
-            clickCount++;
-            showMessage(`You clicked ${clickCount} times! 🎯`, '👆');
-            if (clickCount === 5) showMessage('WOW! 5 clicks! You\'re a pro!', '🏆');
-            if (clickCount === 10) showMessage('🌟 SUPER CLICKER! 🌟', '👑');
-            if (clickCount === 20) showMessage('LEGENDARY CLICKER! 🔥', '⚡');
-        });
-    }
-
-    // Try free button
-    if (tryBtn) {
-        tryBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            showMessage('🎁 Free coding coming right up!', '🎈');
-        });
-    }
-
-    // Start button (CTA)
-    if (startBtn) {
-        startBtn.addEventListener('click', function() {
-            showMessage('🚀 Let\'s go, pal! Adventure awaits!', '🎮');
-        });
-    }
-
-    // Project cards – click to start building
+    // Project cards (create.html) -- click to start building
     projectCards.forEach(card => {
         card.addEventListener('click', function() {
             const projectName = this.querySelector('h4')?.textContent || 'this project';
-            showMessage(`✨ ${projectName} is ready to build!`, '🎯');
-            // Optional: redirect to create page with template
+            window.showMessage?.(`${projectName} is ready to build!`);
             const templateId = this.getAttribute('data-template-id');
             if (templateId && window.location.pathname === '/') {
                 setTimeout(() => {
@@ -98,62 +19,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Feature cards
+    // Feature cards (index.html)
     featureCards.forEach(card => {
         card.addEventListener('click', function() {
-            const feature = this.querySelector('h3')?.textContent || 'power';
-            showMessage(`⚡ ${feature} power activated!`, '💫');
+            const feature = this.querySelector('h3')?.textContent || 'this feature';
+            window.showMessage?.(`${feature}`);
         });
     });
-
-    // Buddy cards
-    buddyCards.forEach(card => {
-        card.addEventListener('click', function() {
-            const buddy = this.querySelector('h3')?.textContent || 'Pal';
-            showMessage(`👋 ${buddy} says hello, pal!`, '💜');
-        });
-    });
-
-    // Testimonial rotator (changes every 5 seconds)
-    const testimonials = [
-        { text: 'I made my first game in 1 hour!', author: 'Karabo, 10', emoji: '🎮' },
-        { text: 'Nexa Pals is my favorite!', author: 'Relebohile, 11', emoji: '⭐' },
-        { text: 'I taught my little brother!', author: 'Lesedi, 12', emoji: '💪' },
-        { text: 'Way better than video games!', author: 'Kamo, 10', emoji: '🎯' },
-        { text: 'My teacher uses it in class!', author: 'Thabo, 11', emoji: '📚' },
-        { text: 'Coding is now my superpower!', author: 'Mia, 10', emoji: '🦸' }
-    ];
-    let testimonialIndex = 0;
-    const testimonialText = document.getElementById('testimonialText');
-    const testimonialAuthor = document.getElementById('testimonialAuthor');
-    
-    if (testimonialText && testimonialAuthor) {
-        setInterval(() => {
-            testimonialIndex = (testimonialIndex + 1) % testimonials.length;
-            const t = testimonials[testimonialIndex];
-            testimonialText.textContent = `${t.emoji} ${t.text}`;
-            testimonialAuthor.textContent = t.author;
-            if (testimonialBox) {
-                testimonialBox.style.transform = 'scale(1.02)';
-                setTimeout(() => testimonialBox.style.transform = '', 200);
-            }
-        }, 5000);
-    }
-
-    // Social icons click
-    socialIcons.forEach(icon => {
-        icon.addEventListener('click', function() {
-            const platform = this.classList[1]?.replace('fa-', '') || 'social';
-            showMessage(`📱 Find us on ${platform}!`, '🌟');
-        });
-    });
-
-    // Welcome message after page loads
-    setTimeout(() => {
-        showMessage('👋 Welcome to Nexa Pals!', '🎈');
-    }, 800);
 });
-
 // ========== PLAY PAGE SPECIFIC FUNCTIONS (code editor) ==========
 // These are used only on the play.html page
 window.runCode = function() {
@@ -197,17 +70,19 @@ window.saveProject = async function() {
         const data = await response.json();
         if (data.success) {
             window.currentProjectId = data.project_id;
-            if (typeof window.showMessage === 'function') {
-                window.showMessage('Project saved! 💾', '✅');
+            if (data.xp_earned > 0 && typeof window.showXpToast === 'function') {
+                window.showXpToast(data.xp_earned, 'Ship bonus!');
+            } else if (typeof window.showMessage === 'function') {
+                window.showMessage('Project saved!');
             } else {
-                alert('✅ Project saved!');
+                alert('Project saved!');
             }
             refreshProjectList(data.project_id);
         } else {
-            alert('❌ ' + (data.message || 'Error saving project'));
+            alert(data.message || 'Error saving project');
         }
     } catch (error) {
-        alert('❌ Network error. Please try again.');
+        alert('Network error. Please try again.');
     }
 };
 
@@ -230,17 +105,17 @@ window.loadProject = async function() {
             window.currentProjectId = data.project_id;
             if (typeof window.runCode === 'function') window.runCode();
         } else {
-            alert('❌ ' + (data.message || 'Error loading project'));
+            alert(data.message || 'Error loading project');
         }
     } catch (error) {
-        alert('❌ Error loading project');
+        alert('Error loading project');
     }
 };
 
 window.startNewProject = function() {
     document.getElementById('htmlEditor').value = '<h1>Hello, Nexa Pals!</h1>\n<p>Change this code and see the magic.</p>\n<button id="myBtn">Click Me</button>';
     document.getElementById('cssEditor').value = 'h1 { color: #FFB347; font-family: sans-serif; }\nbutton { background: #9B7EDE; color: white; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; }\nbutton:hover { background: #7B5EC0; }';
-    document.getElementById('jsEditor').value = "document.getElementById('myBtn')?.addEventListener('click', () => {\n    alert('You clicked the button! 🎉');\n});";
+    document.getElementById('jsEditor').value = "document.getElementById('myBtn')?.addEventListener('click', () => {\n    alert('You clicked the button!');\n});";
     document.getElementById('projectTitle').value = '';
     window.currentProjectId = null;
     const select = document.getElementById('projectSelect');
@@ -262,14 +137,14 @@ window.deleteCurrentProject = async function() {
         });
         const data = await response.json();
         if (data.success) {
-            alert('🗑️ Project deleted');
+            alert('Project deleted');
             window.startNewProject();
             removeProjectFromList(window.currentProjectId);
         } else {
-            alert('❌ ' + (data.message || 'Error deleting project'));
+            alert(data.message || 'Error deleting project');
         }
     } catch (error) {
-        alert('❌ Network error. Please try again.');
+        alert('Network error. Please try again.');
     }
 };
 
@@ -300,3 +175,191 @@ function removeProjectFromList(projectId) {
 if (document.getElementById('htmlEditor')) {
     window.runCode();
 }
+// ── XP Toast ──────────────────────────────────────────────────────────────
+window.showXpToast = function(xp, msg) {
+  const toast = document.getElementById('xpToast');
+  if (!toast) return;
+  document.getElementById('xpNum').textContent = '+' + xp;
+  document.getElementById('xpMsg').textContent = msg || 'XP earned!';
+  toast.classList.add('show');
+  window.NexaSound?.correct();
+  setTimeout(() => toast.classList.remove('show'), 3000);
+};
+
+// ── Confetti burst ───────────────────────────────────────────────────────
+// A lightweight, dependency-free celebration for milestones (lesson pass,
+// badge earned, level up) — small colored divs, CSS-animated, removed after
+// they finish falling. No canvas, no external library, no images.
+window.showConfetti = function(opts) {
+  opts = opts || {};
+  const count = opts.count || 60;
+  const colors = ['#FFB347', '#9B7EDE', '#5D9BEC', '#1e5f4b', '#e25c5c'];
+  const container = document.createElement('div');
+  container.className = 'confetti-container';
+  document.body.appendChild(container);
+  for (let i = 0; i < count; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDelay = (Math.random() * 0.4) + 's';
+    piece.style.animationDuration = (2.2 + Math.random() * 1.2) + 's';
+    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+    piece.style.width = piece.style.height = (6 + Math.random() * 6) + 'px';
+    container.appendChild(piece);
+  }
+  setTimeout(() => container.remove(), 3800);
+};
+
+// ── Message popup (global) ────────────────────────────────────────────────
+window.showMessage = function(text) {
+  const popup = document.getElementById('messagePopup');
+  if (!popup) return;
+  popup.textContent = text;
+  popup.classList.add('show');
+  setTimeout(() => popup.classList.remove('show'), 2500);
+};
+
+// ========== ANIMATIONS & VISUAL POLISH ==========
+document.addEventListener('DOMContentLoaded', function () {
+  // Navbar shadow on scroll
+  const navbar = document.querySelector('.navbar');
+  if (navbar) {
+    const onScroll = () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 12);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  // Scroll-triggered entrance animations
+  const animTargets = document.querySelectorAll(
+    '.path-track, .encourage-inner, .journey-progress-card, .feature-card, .project-card, .lesson-card, .lb-row, .stat-item, .hero-card'
+  );
+  if (animTargets.length && 'IntersectionObserver' in window) {
+    animTargets.forEach((el, i) => {
+      el.classList.add('anim-in');
+      if (i % 5 === 1) el.classList.add('anim-in-delay-1');
+      else if (i % 5 === 2) el.classList.add('anim-in-delay-2');
+      else if (i % 5 === 3) el.classList.add('anim-in-delay-3');
+      else if (i % 5 === 4) el.classList.add('anim-in-delay-4');
+    });
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -24px 0px' }
+    );
+    animTargets.forEach((el) => io.observe(el));
+  } else {
+    animTargets.forEach((el) => el.classList.add('visible'));
+  }
+
+  // Smooth focus ring for keyboard users on interactive path nodes
+  document.querySelectorAll('.path-node').forEach((node) => {
+    node.addEventListener('focus', () => node.classList.add('focus-visible'));
+    node.addEventListener('blur', () => node.classList.remove('focus-visible'));
+  });
+});
+
+// ========== HOVER / INTERACTION ENHANCEMENTS ==========
+document.addEventListener('DOMContentLoaded', function () {
+  // Soft ripple on primary buttons
+  document.querySelectorAll('.btn, .big-btn').forEach((btn) => {
+    btn.addEventListener('click', function (e) {
+      const rect = this.getBoundingClientRect();
+      const ripple = document.createElement('span');
+      const size = Math.max(rect.width, rect.height);
+      ripple.style.cssText = [
+        'position:absolute',
+        'border-radius:50%',
+        'background:rgba(255,255,255,0.35)',
+        'pointer-events:none',
+        'width:' + size + 'px',
+        'height:' + size + 'px',
+        'left:' + (e.clientX - rect.left - size / 2) + 'px',
+        'top:' + (e.clientY - rect.top - size / 2) + 'px',
+        'transform:scale(0)',
+        'animation:rippleOut 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+      ].join(';');
+      if (getComputedStyle(this).position === 'static') {
+        this.style.position = 'relative';
+      }
+      this.style.overflow = 'hidden';
+      this.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    });
+  });
+});
+
+// Inject ripple keyframes once
+(function () {
+  if (document.getElementById('nexa-ripple-style')) return;
+  const s = document.createElement('style');
+  s.id = 'nexa-ripple-style';
+  s.textContent = '@keyframes rippleOut{to{transform:scale(2.4);opacity:0}}';
+  document.head.appendChild(s);
+})();
+
+// ========== PAGE TRANSITIONS ==========
+(function () {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Mark page ready for enter animation
+  function markReady() {
+    document.body.classList.add('page-ready');
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', markReady);
+  } else {
+    markReady();
+  }
+
+  if (reduceMotion) return;
+
+  // Fade out before navigating to internal pages
+  document.addEventListener('click', function (e) {
+    const a = e.target.closest('a');
+    if (!a) return;
+
+    const href = a.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+    if (a.target === '_blank' || a.hasAttribute('download')) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+    // External or same-page
+    let url;
+    try { url = new URL(href, window.location.origin); } catch (_) { return; }
+    if (url.origin !== window.location.origin) return;
+    if (url.pathname === window.location.pathname && url.hash) return; // in-page anchor
+
+    // Don't animate form-like or JS handlers
+    if (a.getAttribute('onclick') && href === '#') return;
+
+    e.preventDefault();
+    if (document.body.classList.contains('page-exit')) return;
+    document.body.classList.remove('page-ready');
+    document.body.classList.add('page-exit');
+
+    let navigated = false;
+    const go = () => {
+      if (navigated) return;
+      navigated = true;
+      window.location.href = url.href;
+    };
+    setTimeout(go, 280);
+  });
+
+  // Handle browser back/forward cache restore
+  window.addEventListener('pageshow', function (e) {
+    if (e.persisted) {
+      document.body.classList.remove('page-exit');
+      document.body.classList.add('page-ready');
+    }
+  });
+})();
