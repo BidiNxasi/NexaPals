@@ -1037,6 +1037,34 @@ QUIZ_FIXES = {
 }
 
 
+def quiz_problems(quiz):
+    """Return a list of plain-English problems with a quiz, empty if it is sound.
+    Catches the mistakes that make answers get checked wrongly: an answer index
+    that is out of range or not a whole number (for example 1-based, or a letter),
+    duplicate options, and pick-several lists that do not match the options."""
+    if not isinstance(quiz, list):
+        return ['The quiz must be a list of questions.']
+    out = []
+    for i, q in enumerate(quiz, 1):
+        if not isinstance(q, dict) or not q.get('q') or not isinstance(q.get('options'), list):
+            out.append('Question %d needs "q" and "options".' % i); continue
+        n = len(q['options'])
+        texts = [str(o).strip().lower() for o in q['options']]
+        if n < 2:
+            out.append('Question %d needs at least 2 options.' % i)
+        if len(set(texts)) != n:
+            out.append('Question %d has two options that are the same.' % i)
+        def okidx(v):
+            return isinstance(v, int) and not isinstance(v, bool) and 0 <= v < n
+        if 'answers' in q:
+            a = q['answers']
+            if not (isinstance(a, list) and len(a) >= 2 and len(set(a)) == len(a) and all(okidx(v) for v in a)):
+                out.append('Question %d: "answers" must be 2 or more different option numbers, counting from 0.' % i)
+        elif not okidx(q.get('answer')):
+            out.append('Question %d: "answer" must be an option number from 0 to %d (got %r).' % (i, n - 1, q.get('answer')))
+    return out
+
+
 def apply_quiz_fixes(db, Lesson):
     changed = 0
     for (track, order), fixes in QUIZ_FIXES.items():
@@ -1056,6 +1084,13 @@ def apply_quiz_fixes(db, Lesson):
             changed += 1
     if changed:
         db.session.commit()
+    for lesson in Lesson.query.all():
+        try:
+            problems = quiz_problems(json.loads(lesson.quiz_json or '[]'))
+        except ValueError:
+            problems = ['quiz_json is not valid JSON']
+        for pr in problems:
+            logging.getLogger(__name__).warning('Quiz problem in lesson %s (%s %s): %s', lesson.id, lesson.track, lesson.order, pr)
     return changed
 
 

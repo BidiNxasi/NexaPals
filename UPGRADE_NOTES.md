@@ -420,3 +420,8 @@ official name, tell me and I'll make it consistent everywhere.
 - /api/* calls from a logged-out user now get a JSON 401 instead of a redirect (this made the AI tutor say "Network error"). Tutor shows clear messages.
 - Footer: social icons only show when SOCIAL_YOUTUBE / SOCIAL_INSTAGRAM / SOCIAL_TIKTOK are set in .env; the email comes from CONTACT_EMAIL.
 - New test: tests/test_quiz_ui.py (browser, 16 checks).
+
+## Round: quiz answer-check hardening
+- Checked all 178 option clicks across every built-in quiz in a real browser: each pick reaches the server as the right option number. Built-in quizzes are sound.
+- Quizzes made by the admin AI generator or typed into the admin form can have a bad key (out of range, 1-based, a letter, two defensible answers). Added `quiz_problems()`: the admin form now refuses bad quizzes, startup logs a warning for any bad quiz already in the database, and the AI generator checks every question blind and drops ones it cannot agree with.
+- New test: tests/test_quiz_data.py.

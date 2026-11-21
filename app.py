@@ -1855,6 +1855,9 @@ def admin_lesson_new():
                 json.loads(practice_raw)
         except json.JSONDecodeError as e:
             flash(f'That JSON is invalid: {e}'); return redirect(url_for('admin_lesson_new'))
+        _qp = lm.quiz_problems(json.loads(quiz_raw))
+        if _qp:
+            flash('Quiz not saved: ' + ' '.join(_qp)); return redirect(url_for('admin_lesson_new'))
         lesson = Lesson(
             track=request.form.get('track', 'html'),
             order=int(request.form.get('order') or 0),
@@ -1884,6 +1887,9 @@ def admin_lesson_edit(lesson_id):
                 json.loads(practice_raw)
         except json.JSONDecodeError as e:
             flash(f'That JSON is invalid: {e}'); return redirect(url_for('admin_lesson_edit', lesson_id=lesson_id))
+        _qp = lm.quiz_problems(json.loads(quiz_raw))
+        if _qp:
+            flash('Quiz not saved: ' + ' '.join(_qp)); return redirect(url_for('admin_lesson_edit', lesson_id=lesson_id))
         lesson.track = request.form.get('track', lesson.track)
         lesson.order = int(request.form.get('order') or lesson.order)
         lesson.title = sanitize(request.form.get('title', ''), 150)
@@ -2614,6 +2620,28 @@ def ai_generate():
         return _err('AI unavailable right now — please try again in a moment')
 
 # ── 5. Admin Quiz Generator (Groq by default, JSON mode) ─────────────────────
+def _drop_unverified_quiz_questions(questions):
+    """AI answer keys are sometimes wrong, or the question has two defensible
+    answers. Ask the model to answer each question blind (no key shown); keep a
+    question only if it picks the same option. If the check itself fails, keep
+    nothing silently: return the questions and let the admin review them."""
+    kept, dropped = [], 0
+    for q in questions:
+        try:
+            opts = '\n'.join(f'{i}: {o}' for i, o in enumerate(q['options']))
+            raw = _chat_groq_json(
+                'You answer multiple-choice questions for kids. Reply ONLY with JSON like {"pick": 2, "only_one_correct": true}. '
+                '"pick" is the number of the best option. Set "only_one_correct" to false if more than one option is defensibly right.',
+                f"{q['q']}\n{opts}", max_tokens=60)
+            r = json.loads(raw)
+            if r.get('pick') == q['answer'] and r.get('only_one_correct', True):
+                kept.append(q)
+            else:
+                dropped += 1
+        except Exception:
+            return questions, 0
+    return kept, dropped
+
 @app.route('/api/ai/quiz', methods=['POST'])
 @login_required
 def ai_quiz():
@@ -2650,7 +2678,13 @@ def ai_quiz():
                 raise ValueError('Missing question fields')
             if len(q['options']) != 4:
                 raise ValueError('Each question must have exactly 4 options')
-        return jsonify({'success': True, 'questions': questions})
+        problems = lm.quiz_problems(questions)
+        if problems:
+            raise ValueError(' '.join(problems))
+        questions, dropped = _drop_unverified_quiz_questions(questions)
+        return jsonify({'success': True, 'questions': questions,
+                        'note': (f'{dropped} question(s) were left out because the AI could not '
+                                 'agree with its own answer key. Generate again for more.') if dropped else ''})
     except (json.JSONDecodeError, ValueError) as e:
         if not ENABLE_GEMINI:
             return _err(f'AI returned unexpected format — try again: {e}', 500)
