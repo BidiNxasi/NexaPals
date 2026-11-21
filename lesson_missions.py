@@ -1010,6 +1010,55 @@ def practice_mission(skill):
     return {"title": "Practice: " + SKILL_LABELS.get(skill, skill), "success_msg": "Extra practice done. That skill just got stronger.", "skill": skill, "steps": steps}
 
 
+# Quiz questions that testers found confusing. Keyed by (track, order) then
+# question number (0-based); each entry replaces that question. Applied on every
+# start, so existing databases get the fix without re-seeding.
+#   "answer": n         pick one
+#   "answers": [n, m]   pick all that apply (the page says how many)
+QUIZ_FIXES = {
+    ("html", 1): {
+        1: {"q": "Which ONE tag makes the BIGGEST heading?",
+            "options": ["<h6>", "<h1>", "<big>", "<heading>"], "answer": 1},
+        2: {"q": "Which one is the CLOSING tag for <p>?",
+            "options": ["</p>", "<p/>", "<\\p>", "<end p>"], "answer": 0},
+    },
+    ("javascript", 1): {
+        0: {"q": "Which keyword makes a variable that you can change later?",
+            "options": ["const", "fixed", "let", "set"], "answer": 2},
+    },
+    ("javascript", 3): {
+        2: {"q": "What are the values you hand IN to a function called?",
+            "options": ["Returns", "Parameters (also called arguments)", "Outputs", "Variables"], "answer": 1},
+    },
+    ("css", 3): {
+        2: {"q": "Which unit makes font size relative to the screen WIDTH?",
+            "options": ["px", "vw", "em", "cm"], "answer": 1},
+    },
+}
+
+
+def apply_quiz_fixes(db, Lesson):
+    changed = 0
+    for (track, order), fixes in QUIZ_FIXES.items():
+        lesson = Lesson.query.filter_by(track=track, order=order).first()
+        if not lesson or not lesson.quiz_json:
+            continue
+        try:
+            quiz = json.loads(lesson.quiz_json)
+        except ValueError:
+            continue
+        before = json.dumps(quiz)
+        for idx, q in fixes.items():
+            if idx < len(quiz):
+                quiz[idx] = q
+        if json.dumps(quiz) != before:
+            lesson.quiz_json = json.dumps(quiz)
+            changed += 1
+    if changed:
+        db.session.commit()
+    return changed
+
+
 def apply_missions(db, Lesson):
     """Write missions into Lesson.practice_json. Safe to run on every start."""
     changed = 0
@@ -1024,4 +1073,5 @@ def apply_missions(db, Lesson):
             changed += 1
     if changed:
         db.session.commit()
+    apply_quiz_fixes(db, Lesson)
     return changed

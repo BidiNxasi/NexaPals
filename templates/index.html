@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', tryItRun);
       <a href="{{ url_for('learn') }}"  class="btn btn-xl btn-ghost" style="color:var(--white);border-color:rgba(255,255,255,0.25);text-decoration:none;">Browse Lessons</a>
     </div>
     <p style="font-size:0.82rem;color:var(--smoke);">
-      Questions? <a href="mailto:info@nexapals.co.za" style="color:var(--yellow);font-weight:700;">info@nexapals.co.za</a>
+      Questions? <a href="mailto:{{ site_contact_email }}" style="color:var(--yellow);font-weight:700;">{{ site_contact_email }}</a>
       &nbsp;·&nbsp;
       <a href="{{ url_for('about') }}" style="color:var(--yellow);font-weight:700;">About Nexa Pals</a>
     </p>

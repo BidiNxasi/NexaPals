@@ -34,9 +34,12 @@
     {{ lesson.content | safe }}
   </div>
 
-  <!-- Try in playground -->
-  <div style="text-align:center;margin-bottom:1.5rem;">
-    <a href="{{ url_for('play') }}" class="big-btn green" style="text-decoration:none;"><i class="fas fa-play"></i> Try it in the Playground</a>
+  <!-- Start here: the mission is the main path. The playground is optional. -->
+  <div style="text-align:center;margin-bottom:1.5rem;display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap;align-items:center;">
+    {% if practice %}
+    <a href="#missionRoot" class="big-btn green" id="startMission" style="text-decoration:none;"><i class="fas fa-rocket"></i> Start the mission</a>
+    {% endif %}
+    <a href="{{ url_for('play', **{'from': lesson.id}) }}" style="color:#4a627a;font-weight:700;text-decoration:underline;font-size:.9rem;"><i class="fas fa-flask"></i> Or just play around first (optional)</a>
   </div>
 
   <!-- Interactive mission -->
@@ -51,17 +54,23 @@
       <span style="font-size:1.6rem;color:{{ tc }};"><i class="fas fa-brain"></i></span>
       <div>
         <h2 style="margin:0;color:#1e3a5f;font-size:1.3rem;">Quick Quiz</h2>
-        <p style="margin:0;font-size:0.85rem;color:#6c757d;">Score 70%+ to complete this lesson and earn XP</p>
+        <p style="margin:0;font-size:0.85rem;color:#6c757d;">Score {{ pass_mark }}%+ to complete this lesson and earn XP</p>
       </div>
     </div>
 
     {% for q in quiz %}
     <div class="quiz-question" id="q{{ loop.index0 }}">
+      {% set qi = loop.index0 %}
+      {% set multi = q.answers is defined and q.answers %}
       <p>{{ loop.index }}. {{ q.q }}</p>
+      <p class="quiz-how" style="margin:-.2rem 0 .5rem;font-size:.82rem;font-weight:700;color:#55688a;">
+        {% if multi %}<i class="fas fa-square-check"></i> Pick {{ q.answers|length }} answers (tick every one that is right){% else %}<i class="fas fa-circle-dot"></i> Pick ONE answer{% endif %}
+        <button type="button" class="quiz-clear" data-q="{{ qi }}" style="margin-left:.6rem;background:none;border:none;color:#2f6fc0;text-decoration:underline;cursor:pointer;font:inherit;font-weight:600;">Clear my answer</button>
+      </p>
       <div style="display:flex;flex-direction:column;gap:0.4rem;">
         {% for opt in q.options %}
-        <label class="quiz-opt" id="opt{{ loop.index0 }}_{{ loop.index0 }}">
-          <input type="radio" name="q{{ loop.index0 }}" value="{{ loop.index0 }}" style="accent-color:{{ tc }};">
+        <label class="quiz-opt">
+          <input type="{{ 'checkbox' if multi else 'radio' }}" name="q{{ qi }}" value="{{ loop.index0 }}" style="accent-color:{{ tc }};">
           <span>{{ opt }}</span>
         </label>
         {% endfor %}
@@ -70,6 +79,7 @@
     </div>
     {% endfor %}
 
+    <p id="quizMsg" role="alert" style="display:none;text-align:center;font-weight:700;color:#8a2d2d;background:#fdecec;border-radius:12px;padding:.5rem .8rem;margin:1rem 0 0;"></p>
     <div style="text-align:center;margin-top:1rem;">
       <button id="submitQuiz" class="big-btn" style="font-size:1.1rem;padding:0.8rem 2rem;"><i class="fas fa-circle-check"></i> Submit Answers</button>
     </div>
@@ -199,6 +209,55 @@ if (hasMission) {
   });
 }
 let submitted  = false;
+
+// Let a kid un-pick a radio answer by clicking it again, and add a Clear button.
+document.querySelectorAll('.quiz-opt').forEach(lbl => {
+  const inp = lbl.querySelector('input');
+  lbl.addEventListener('pointerdown', () => { lbl.dataset.was = inp.checked ? '1' : ''; });
+  inp.addEventListener('click', () => {
+    if (inp.type === 'radio' && lbl.dataset.was === '1') inp.checked = false;
+    lbl.dataset.was = '';
+  });
+});
+document.querySelectorAll('.quiz-clear').forEach(b => b.addEventListener('click', () => {
+  if (submitted) return;
+  document.querySelectorAll(`input[name="q${b.dataset.q}"]`).forEach(r => { r.checked = false; });
+}));
+
+// Mark each question using the server's verdict. A passing quiz shows the right
+// answers. A failing one does NOT give them away: right answers lock in, wrong
+// ones are cleared so the kid has to think again.
+function showQuizFeedback(data) {
+  quizData.forEach((q, i) => {
+    const ok = !!(data.results && data.results[i]);
+    const fb = document.getElementById('fb' + i);
+    fb.style.display = 'block';
+    fb.style.background = ok ? '#d4edda' : '#f8d7da';
+    fb.style.color      = ok ? '#155724' : '#721c24';
+    const inputs = [...document.querySelectorAll(`input[name="q${i}"]`)];
+    if (ok) {
+      fb.textContent = 'Correct!';
+      inputs.forEach(r => { r.disabled = true; });
+      window.NexaSound?.correct();
+    } else if (data.passed) {
+      const right = Array.isArray(q.answers) ? q.answers.map(n => q.options[n]).join(' and ') : q.options[q.answer];
+      fb.textContent = 'The answer was: ' + right;
+      inputs.forEach(r => { r.disabled = true; });
+      window.NexaSound?.wrong();
+    } else {
+      fb.textContent = 'Not quite. Have another look at the lesson and pick again.';
+      inputs.forEach(r => { r.checked = false; });
+      window.NexaSound?.wrong();
+    }
+    if (ok || data.passed) {
+      inputs.forEach(r => {
+        const lbl = r.closest('label');
+        const right = Array.isArray(q.answers) ? q.answers.includes(parseInt(r.value)) : parseInt(r.value) === q.answer;
+        if (right) lbl.classList.add('correct');
+      });
+    }
+  });
+}
 const alreadyPassed = {{ 'true' if progress and progress.completed else 'false' }};
 const lessonId      = {{ lesson.id }};
 
@@ -218,34 +277,26 @@ if (alreadyPassed) {
 document.getElementById('submitQuiz')?.addEventListener('click', async function() {
   if (submitted || alreadyPassed) return;
 
-  // Collect
+  // Collect (one number per pick-one question, a list for pick-several)
   const answers = [];
+  const msg = document.getElementById('quizMsg');
+  msg.style.display = 'none';
   for (let i = 0; i < quizData.length; i++) {
-    const sel = document.querySelector(`input[name="q${i}"]:checked`);
-    if (!sel) { alert('Please answer all questions first!'); return; }
-    answers.push(parseInt(sel.value));
+    const multi = Array.isArray(quizData[i].answers);
+    const picked = [...document.querySelectorAll(`input[name="q${i}"]:checked`)].map(r => parseInt(r.value));
+    if (!picked.length) {
+      msg.textContent = `Question ${i + 1} needs an answer.`;
+      msg.style.display = 'block';
+      document.getElementById('q' + i).scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
+    answers.push(multi ? picked : picked[0]);
   }
 
   submitted = true;
   this.disabled = true;
   this.textContent = 'Checking…';
-
-  // Show per-question feedback
-  quizData.forEach((q, i) => {
-    const chosen  = answers[i];
-    const correct = chosen === q.answer;
-    const fb = document.getElementById('fb' + i);
-    fb.style.display = 'block';
-    fb.style.background = correct ? '#d4edda' : '#f8d7da';
-    fb.style.color      = correct ? '#155724' : '#721c24';
-    fb.textContent = correct ? 'Correct!' : `The answer was: ${q.options[q.answer]}`;
-    document.querySelectorAll(`input[name="q${i}"]`).forEach(r => {
-      const lbl = r.closest('label');
-      if (parseInt(r.value) === q.answer) lbl.classList.add('correct');
-      else if (parseInt(r.value) === chosen && !correct) lbl.classList.add('wrong');
-    });
-    correct ? window.NexaSound?.correct() : window.NexaSound?.wrong();
-  });
+  document.getElementById('quizResult').style.display = 'none';
 
   const meta = document.querySelector('meta[name="csrf-token"]');
   try {
@@ -254,7 +305,15 @@ document.getElementById('submitQuiz')?.addEventListener('click', async function(
       headers:{'Content-Type':'application/json','X-CSRFToken':meta?.content||''},
       body: JSON.stringify({lesson_id: lessonId, answers})
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({success:false, message:'Something went wrong. Please try again.'}));
+    if (!data.success && !data.results) {
+      msg.textContent = data.login_required ? 'Please log in to save your quiz.' : (data.message || 'Something went wrong. Please try again.');
+      msg.style.display = 'block';
+      submitted = false; this.disabled = false;
+      this.innerHTML = '<i class="fas fa-circle-check"></i> Submit Answers';
+      return;
+    }
+    showQuizFeedback(data);
     const resultEl = document.getElementById('quizResult');
     resultEl.style.display = 'block';
 
@@ -302,7 +361,7 @@ document.getElementById('submitQuiz')?.addEventListener('click', async function(
       document.getElementById('resultEmoji').className = 'fas fa-rotate-left';
       document.getElementById('resultEmoji').style.color = '#e25c5c';
       document.getElementById('resultText').textContent  = 'Almost there!';
-      document.getElementById('resultSub').textContent   = `${data.score}% — you need 70% to pass. Re-read the lesson and try again. You've got this!`;
+      document.getElementById('resultSub').textContent   = `${data.score}% — you need ${data.pass_mark || 60}% to pass. Questions you missed are cleared. Re-read the lesson, then answer them again.`;
       submitted = false;
       this.disabled = false;
       this.textContent = 'Try Again';
@@ -355,13 +414,15 @@ async function askTutor() {
       headers:{'Content-Type':'application/json','X-CSRFToken':meta?.content||''},
       body: JSON.stringify({question:q, lesson_title:'{{ lesson.title|e }}', track:'{{ track }}', history:tutorHistory.slice(-6)})
     });
-    const data = await res.json();
-    const reply = data.success ? data.reply : data.message;
+    let data;
+    try { data = await res.json(); } catch (e) { data = {success:false, message:'The tutor could not answer just now. Try again in a moment.'}; }
+    if (data.login_required) data.message = 'Log in to chat with the tutor.';
+    const reply = data.success ? data.reply : (data.message || 'The tutor could not answer just now.');
     thinking.textContent = reply;
     thinking.classList.remove('thinking');
     if (!data.success) thinking.classList.add('error');
     else tutorHistory.push({role:'assistant', content:reply});
-  } catch { thinking.textContent='Network error.'; thinking.classList.remove('thinking'); thinking.classList.add('error'); }
+  } catch { thinking.textContent='Could not reach the tutor. Check your internet and try again.'; thinking.classList.remove('thinking'); thinking.classList.add('error'); }
   btn.disabled = false;
   input.focus();
 }
