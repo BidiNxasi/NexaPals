@@ -95,7 +95,7 @@ with sync_playwright() as p:
     # retry: answer q0 right, q1 with only one of two (still wrong) -> 2/3 = 67% passes at 60
     pg.locator('input[name=q0]').nth(1).locator('xpath=..').click()
     pg.locator('input[name=q1]').nth(0).locator('xpath=..').click()
-    pg.click('#submitQuiz'); pg.wait_for_function("document.querySelector('#resultText')?.textContent.length>0")
+    pg.click('#submitQuiz'); pg.wait_for_function("document.querySelector('#resultText')?.textContent.includes('Nice work')")
     check('Nice work' in pg.inner_text('#resultText'), 'two of three passes (pass mark %d)' % PASS)
     check(pg.locator('.quiz-opt.correct').count() >= 2, 'a passing attempt shows the right answers')
     check('The answer was' in pg.inner_text('#fb1'), 'the missed multi-answer question explains the answer')
