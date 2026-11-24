@@ -27,6 +27,28 @@
           sandbox="allow-scripts"
           title="{{ template.name }}">
   </iframe>
+  {% set how = {
+    'Snake Game': ['Use the arrow keys (or the buttons below) to steer the snake.', 'Eat the food to grow and score. Do not hit the walls or your own tail. Press Restart to play again.'],
+    'Memory Match': ['Click a card to flip it, then click a second card.', 'Find all 8 matching pairs in as few moves as you can.'],
+    'Catch the Stars': ['Move to catch the falling stars.', 'Click the game first so it can hear your keys or mouse.'],
+    'Typing Speed Test': ['Click the box, then type the sentence shown.', 'Your speed appears when you finish.'],
+    'Colour Mixer Lab': ['Move the sliders to mix a new colour.'],
+    'Beat Maker': ['Click the pads to make beats.'],
+  }.get(template.name, [template.description]) %}
+  <div style="max-width:650px;width:100%;margin-top:.9rem;background:#16233a;border:2px solid #2d3f5a;border-radius:14px;padding:.8rem 1rem;color:#dbe6f5;">
+    <strong style="color:#FFB347;"><i class="fas fa-circle-question"></i> How to play</strong>
+    <ul style="margin:.4rem 0 0 1.1rem;padding:0;font-size:.92rem;line-height:1.6;">
+      {% for line in how %}<li>{{ line }}</li>{% endfor %}
+    </ul>
+    <p style="margin:.5rem 0 0;font-size:.82rem;color:#9db3d1;">Click inside the game once first. If keys do nothing, the game has not been clicked yet.</p>
+  </div>
+  {% if template.name == 'Snake Game' %}
+  <div id="dpad" aria-label="On-screen arrow buttons" style="display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,56px);gap:8px;margin-top:.9rem;justify-content:center;">
+    <span></span><button class="dp" data-k="ArrowUp" aria-label="Up">▲</button><span></span>
+    <button class="dp" data-k="ArrowLeft" aria-label="Left">◀</button><button class="dp" data-k="ArrowDown" aria-label="Down">▼</button><button class="dp" data-k="ArrowRight" aria-label="Right">▶</button>
+  </div>
+  <style>.dp{background:#2d3f5a;color:#fff;border:none;border-bottom:4px solid #1b2a40;border-radius:12px;font-size:1.3rem;cursor:pointer}.dp:active{transform:translateY(2px);border-bottom-width:2px}</style>
+  {% endif %}
   <p style="color:#5D9BEC; font-size:0.85rem; margin-top:0.8rem;">
     Tip: <strong style="color:#FFB347;">Remix in Editor</strong> to edit the code and make it your own!
   </p>
@@ -39,12 +61,17 @@ const js   = {{ template.js_code   | tojson }};
 
 function launchGame() {
   const frame = document.getElementById('gameFrame');
-  const doc = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${css}</style></head><body>${html}<script>${js}<\/script></body></html>`;
+  const bridge = `<script>window.addEventListener('message',function(e){if(e.data&&e.data.nexaKey){document.dispatchEvent(new KeyboardEvent('keydown',{key:e.data.nexaKey,bubbles:true}));}});<\/script>`;
+  const doc = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${css}</style></head><body>${html}<script>${js}<\/script>${bridge}</body></html>`;
+  frame.onload = function () { try { frame.focus(); } catch (e) {} };
   frame.srcdoc = doc;
 }
 
 function reloadGame() { launchGame(); }
 
+document.querySelectorAll('.dp').forEach(b => b.addEventListener('click', () => {
+  document.getElementById('gameFrame').contentWindow.postMessage({nexaKey: b.dataset.k}, '*');
+}));
 launchGame();
 
 async function remixInEditor() {

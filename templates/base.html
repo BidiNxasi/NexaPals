@@ -139,7 +139,7 @@
         <span style="font-size:1.2rem;font-weight:800;color:var(--white);">Nexa<span style="color:var(--yellow);">Pals</span></span>
       </div>
       <p style="font-size:0.85rem;line-height:1.7;margin-bottom:1rem;max-width:240px;">Free coding education for South African kids 10+. Learn HTML, CSS &amp; JS through games, AI tutoring, and live projects.</p>
-      <a href="mailto:info@nexapals.co.za" style="color:var(--yellow);font-weight:700;font-size:0.85rem;text-decoration:none;">info@nexapals.co.za</a>
+      <a href="mailto:{{ site_contact_email }}" style="color:var(--yellow);font-weight:700;font-size:0.85rem;text-decoration:none;">{{ site_contact_email }}</a>
     </div>
 
     {% for col_title, links in [
@@ -178,10 +178,10 @@
   <div class="container" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
     <p style="font-size:0.78rem;color:#4a627a;">© 2026 Nexa Pals — Built at the University of the Free State, Bloemfontein, South Africa</p>
     <div style="display:flex;gap:1rem;">
-      <a href="mailto:info@nexapals.co.za" style="color:#4a627a;transition:color 0.15s;" onmouseover="this.style.color='var(--yellow)'" onmouseout="this.style.color='#4a627a'"><i class="fas fa-envelope"></i></a>
-      <a href="#" style="color:#4a627a;transition:color 0.15s;" onmouseover="this.style.color='#ff0000'" onmouseout="this.style.color='#4a627a'"><i class="fab fa-youtube"></i></a>
-      <a href="#" style="color:#4a627a;transition:color 0.15s;" onmouseover="this.style.color='#e1306c'" onmouseout="this.style.color='#4a627a'"><i class="fab fa-instagram"></i></a>
-      <a href="#" style="color:#4a627a;transition:color 0.15s;" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='#4a627a'"><i class="fab fa-tiktok"></i></a>
+      <a href="mailto:{{ site_contact_email }}" aria-label="Email us" style="color:#8aa0bc;transition:color 0.15s;" onmouseover="this.style.color='var(--yellow)'" onmouseout="this.style.color='#8aa0bc'"><i class="fas fa-envelope"></i></a>
+      {% for name, icon, url in site_socials %}
+      <a href="{{ url }}" target="_blank" rel="noopener noreferrer" aria-label="Nexa Pals on {{ name|capitalize }}" style="color:#8aa0bc;transition:color 0.15s;" onmouseover="this.style.color='var(--yellow)'" onmouseout="this.style.color='#8aa0bc'"><i class="fab {{ icon }}"></i></a>
+      {% endfor %}
     </div>
   </div>
 </footer>

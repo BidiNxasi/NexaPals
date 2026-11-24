@@ -68,6 +68,27 @@ csrf = CSRFProtect(app)
 def inject_csrf_token():
     return dict(csrf_token=generate_csrf)
 
+@login_manager.unauthorized_handler
+def _unauthorized():
+    # A fetch() to /api/... used to be redirected to the login page, so the
+    # browser got HTML, res.json() threw, and the AI tutor said "Network error".
+    # Send API callers a clear JSON answer instead.
+    if request.path.startswith('/api/'):
+        return jsonify({'success': False, 'login_required': True,
+                        'message': 'Please log in to use this.'}), 401
+    flash('Please log in to see that page.')
+    return redirect(url_for('login', next=request.full_path.rstrip('?')))
+
+@app.context_processor
+def inject_site_links():
+    # Set SOCIAL_YOUTUBE / SOCIAL_INSTAGRAM / SOCIAL_TIKTOK in .env to the full
+    # profile URLs. An icon with no URL set is simply not shown, so there are
+    # never dead "#" links.
+    socials = [(name, icon, os.getenv('SOCIAL_' + name.upper(), '').strip())
+               for name, icon in (('youtube', 'fa-youtube'), ('instagram', 'fa-instagram'), ('tiktok', 'fa-tiktok'))]
+    return dict(site_socials=[x for x in socials if x[2].startswith(('http://', 'https://'))],
+                site_contact_email=os.getenv('CONTACT_EMAIL') or 'info@nexapals.co.za')
+
 # ── Input sanitisation helper ──────────────────────────────────────────────
 ALLOWED_TAGS: list = []  # strip ALL html from user text inputs
 
@@ -1501,7 +1522,7 @@ def lesson(track, lesson_id):
     practice = json.loads(lesson_obj.practice_json) if lesson_obj.practice_json else None
     return render_template('lesson.html', lesson=lesson_obj, progress=progress,
                            prev_lesson=prev_lesson, next_lesson=next_lesson,
-                           track=track, quiz=quiz, practice=practice)
+                           track=track, quiz=quiz, practice=practice, pass_mark=QUIZ_PASS_MARK)
 
 def _mission_done(user_id, lesson_id):
     """True if this learner has finished the lesson's mission (logged by the
@@ -1662,6 +1683,19 @@ def capstone(track):
     return _mission_page(lm.CAPSTONES[track], lm.CAPSTONES[track]['title'], 'Build it yourself. No worked example, and the hints wait until you have tried.',
                          'capstone', TRACK_ACCENT.get(track, '#6c4bb8'), {'track': track})
 
+# 3 questions per lesson: 70 meant one slip failed the lesson (2 of 3 = 67%).
+# 60 lets a kid miss one question; the mission is what proves the skill.
+QUIZ_PASS_MARK = 60
+
+def _quiz_is_correct(q, given):
+    """A question has either "answer": 2 (pick one) or "answers": [0, 2] (pick all
+    that apply). Multi-answer questions need exactly the right set."""
+    if isinstance(q.get('answers'), list):
+        if not isinstance(given, list):
+            return False
+        return sorted(set(given)) == sorted(set(q['answers']))
+    return given == q.get('answer')
+
 @app.route('/api/lesson/complete', methods=['POST'])
 @login_required
 def complete_lesson():
@@ -1678,9 +1712,10 @@ def complete_lesson():
         return jsonify({'success': False, 'needs_mission': True,
                         'message': 'Finish the mission first, then take the quiz.'}), 403
     quiz = json.loads(lesson_obj.quiz_json) if lesson_obj.quiz_json else []
-    correct = sum(1 for i, q in enumerate(quiz) if i < len(answers) and answers[i] == q['answer'])
+    correct_flags = [_quiz_is_correct(q, answers[i] if i < len(answers) else None) for i, q in enumerate(quiz)]
+    correct = sum(correct_flags)
     score = round((correct / len(quiz)) * 100) if quiz else 100
-    passed = score >= 70
+    passed = score >= QUIZ_PASS_MARK
     prog = LessonProgress.query.filter_by(user_id=current_user.id, lesson_id=lesson_id).first()
     xp_earned = 0
     already_completed = bool(prog and prog.completed)
@@ -1707,7 +1742,7 @@ def complete_lesson():
     level_after = current_user.level
     leveled_up = level_after['num'] > level_before
     return jsonify({'success': True, 'score': score, 'correct': correct, 'total': len(quiz),
-                    'passed': passed, 'xp_earned': xp_earned, 'new_badges': badge_data,
+                    'passed': passed, 'pass_mark': QUIZ_PASS_MARK, 'results': correct_flags, 'xp_earned': xp_earned, 'new_badges': badge_data,
                     'leveled_up': leveled_up, 'new_level_name': level_after['name'] if leveled_up else None})
 
 # ── GAMES ────────────────────────────────────────────────────────────────────
@@ -1727,7 +1762,14 @@ def play_game(template_id):
 @login_required
 def play():
     user_projects = UserProject.query.filter_by(user_id=current_user.id).order_by(UserProject.updated_at.desc()).all()
-    return render_template('play.html', user_projects=user_projects, active_project=None)
+    # ?from=<lesson id> lets the playground show a "back to the mission" button.
+    back = None
+    from_id = request.args.get('from', type=int)
+    if from_id:
+        lsn = Lesson.query.get(from_id)
+        if lsn:
+            back = {'title': lsn.title, 'url': url_for('lesson', track=lsn.track, lesson_id=lsn.id) + '#missionRoot'}
+    return render_template('play.html', user_projects=user_projects, active_project=None, back_lesson=back)
 
 @app.route('/play/<int:project_id>')
 @login_required
@@ -1813,6 +1855,9 @@ def admin_lesson_new():
                 json.loads(practice_raw)
         except json.JSONDecodeError as e:
             flash(f'That JSON is invalid: {e}'); return redirect(url_for('admin_lesson_new'))
+        _qp = lm.quiz_problems(json.loads(quiz_raw))
+        if _qp:
+            flash('Quiz not saved: ' + ' '.join(_qp)); return redirect(url_for('admin_lesson_new'))
         lesson = Lesson(
             track=request.form.get('track', 'html'),
             order=int(request.form.get('order') or 0),
@@ -1842,6 +1887,9 @@ def admin_lesson_edit(lesson_id):
                 json.loads(practice_raw)
         except json.JSONDecodeError as e:
             flash(f'That JSON is invalid: {e}'); return redirect(url_for('admin_lesson_edit', lesson_id=lesson_id))
+        _qp = lm.quiz_problems(json.loads(quiz_raw))
+        if _qp:
+            flash('Quiz not saved: ' + ' '.join(_qp)); return redirect(url_for('admin_lesson_edit', lesson_id=lesson_id))
         lesson.track = request.form.get('track', lesson.track)
         lesson.order = int(request.form.get('order') or lesson.order)
         lesson.title = sanitize(request.form.get('title', ''), 150)
@@ -2572,6 +2620,28 @@ def ai_generate():
         return _err('AI unavailable right now — please try again in a moment')
 
 # ── 5. Admin Quiz Generator (Groq by default, JSON mode) ─────────────────────
+def _drop_unverified_quiz_questions(questions):
+    """AI answer keys are sometimes wrong, or the question has two defensible
+    answers. Ask the model to answer each question blind (no key shown); keep a
+    question only if it picks the same option. If the check itself fails, keep
+    nothing silently: return the questions and let the admin review them."""
+    kept, dropped = [], 0
+    for q in questions:
+        try:
+            opts = '\n'.join(f'{i}: {o}' for i, o in enumerate(q['options']))
+            raw = _chat_groq_json(
+                'You answer multiple-choice questions for kids. Reply ONLY with JSON like {"pick": 2, "only_one_correct": true}. '
+                '"pick" is the number of the best option. Set "only_one_correct" to false if more than one option is defensibly right.',
+                f"{q['q']}\n{opts}", max_tokens=60)
+            r = json.loads(raw)
+            if r.get('pick') == q['answer'] and r.get('only_one_correct', True):
+                kept.append(q)
+            else:
+                dropped += 1
+        except Exception:
+            return questions, 0
+    return kept, dropped
+
 @app.route('/api/ai/quiz', methods=['POST'])
 @login_required
 def ai_quiz():
@@ -2608,7 +2678,13 @@ def ai_quiz():
                 raise ValueError('Missing question fields')
             if len(q['options']) != 4:
                 raise ValueError('Each question must have exactly 4 options')
-        return jsonify({'success': True, 'questions': questions})
+        problems = lm.quiz_problems(questions)
+        if problems:
+            raise ValueError(' '.join(problems))
+        questions, dropped = _drop_unverified_quiz_questions(questions)
+        return jsonify({'success': True, 'questions': questions,
+                        'note': (f'{dropped} question(s) were left out because the AI could not '
+                                 'agree with its own answer key. Generate again for more.') if dropped else ''})
     except (json.JSONDecodeError, ValueError) as e:
         if not ENABLE_GEMINI:
             return _err(f'AI returned unexpected format — try again: {e}', 500)

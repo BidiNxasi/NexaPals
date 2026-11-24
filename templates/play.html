@@ -2,6 +2,12 @@
 {% block title %}Playground{% endblock %}
 
 {% block content %}
+{% if back_lesson %}
+<div style="background:#fff7e0;border-bottom:2px solid #FFB347;padding:.7rem 1.5rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;justify-content:center;">
+  <span style="color:#5a4300;font-weight:600;">Free play. Nothing here counts towards your lesson.</span>
+  <a href="{{ back_lesson.url }}" class="btn btn-yellow" style="text-decoration:none;"><i class="fas fa-arrow-left"></i> Back to the mission: {{ back_lesson.title }}</a>
+</div>
+{% endif %}
 <div class="play-header">
   <div class="play-header-inner">
     <div>

@@ -254,7 +254,7 @@ async function generateQuiz() {
         if (data.success) {
             renderQuizPreview(data.questions);
             document.getElementById('quizJsonRaw').textContent = JSON.stringify(data.questions, null, 2);
-            status.textContent = `${data.questions.length} questions generated. Review them below, then copy the JSON.`;
+            status.textContent = `${data.questions.length} questions generated. Review them below, then copy the JSON.` + (data.note ? ' ' + data.note : '');
             result.style.display = 'block';
             window._generatedQuiz = data.questions;
         } else {

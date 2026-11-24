@@ -410,3 +410,18 @@ official name, tell me and I'll make it consistent everywhere.
 - Audit found 24 places where kids met a concept (ol, table, form, class, hex colours, padding, gradient, :hover, else if, classList.toggle, arrays, createElement ...) without an introduction. Added ~14 explore/fill steps plus anatomy steps so every lesson mission introduces what it uses.
 - Blank steps now fail when the gaps are left empty (JS2 `else if` also checks the code shape).
 - Browser suite: 163 steps, 0 failures. Flask app and tests/test_learning_routes.py still not run in this environment.
+
+## Round: tester feedback (quiz, playground, snake, socials, chatbot)
+- Quiz: every question says "Pick ONE answer" or "Pick N answers"; questions can now have several right answers (`"answers": [0, 3]`). Answers can be un-picked (click again, or "Clear my answer"). A failed attempt clears the wrong answers and does not reveal them; a pass shows them. Missing answer shows an inline message, not an alert.
+- Pass mark is now `QUIZ_PASS_MARK = 60` (was 70). With 3 questions, 70 meant one slip failed the lesson and blocked the next one.
+- Fixed confusing questions via `QUIZ_FIXES` in lesson_missions.py (html1 Q2/Q3, js1 Q1 where `var` was also right, js3 Q3, css3 Q3).
+- Lesson page: "Start the mission" is the main button; the playground is an optional link that carries `?from=<lesson>`, and the playground shows "Back to the mission".
+- Arcade: "How to play" box for every game, on-screen arrow buttons for Snake, iframe takes focus.
+- /api/* calls from a logged-out user now get a JSON 401 instead of a redirect (this made the AI tutor say "Network error"). Tutor shows clear messages.
+- Footer: social icons only show when SOCIAL_YOUTUBE / SOCIAL_INSTAGRAM / SOCIAL_TIKTOK are set in .env; the email comes from CONTACT_EMAIL.
+- New test: tests/test_quiz_ui.py (browser, 16 checks).
+
+## Round: quiz answer-check hardening
+- Checked all 178 option clicks across every built-in quiz in a real browser: each pick reaches the server as the right option number. Built-in quizzes are sound.
+- Quizzes made by the admin AI generator or typed into the admin form can have a bad key (out of range, 1-based, a letter, two defensible answers). Added `quiz_problems()`: the admin form now refuses bad quizzes, startup logs a warning for any bad quiz already in the database, and the AI generator checks every question blind and drops ones it cannot agree with.
+- New test: tests/test_quiz_data.py.
