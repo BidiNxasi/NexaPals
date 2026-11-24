@@ -2,18 +2,25 @@
 {% block title %}{{ heading }}{% endblock %}
 {% block content %}
 <div style="max-width:880px;margin:1.5rem auto;padding:0 1.2rem;">
-  <p style="margin:0 0 .6rem;">{% if mode in ['intro','precode'] %}<a href="{{ url_for('learn') }}" style="color:#55688a;font-weight:700;text-decoration:none;">&larr; All lessons</a>{% else %}<a href="{{ url_for('my_skills') }}" style="color:#55688a;font-weight:700;text-decoration:none;">&larr; My skills</a>{% endif %}</p>
+  <p style="margin:0 0 .6rem;">{% if mode in ['intro','precode','basics'] %}<a href="{{ url_for('learn') }}" style="color:#55688a;font-weight:700;text-decoration:none;">&larr; All lessons</a>{% else %}<a href="{{ url_for('my_skills') }}" style="color:#55688a;font-weight:700;text-decoration:none;">&larr; My skills</a>{% endif %}</p>
   <h1 style="color:#1e3a5f;font-size:1.6rem;margin:.2rem 0;">{{ heading }}</h1>
   <p style="color:#55688a;margin:0 0 1rem;">{{ sub }}</p>
   {% if mission %}
   <div id="missionRoot" aria-label="Interactive mission"></div>
   {% if mode == 'precode' %}
   <div id="precodeCta" style="display:none;background:#fff;border:3px solid #6c4bb8;border-radius:24px;padding:1.4rem 1.6rem;margin-top:1rem;text-align:center;">
-    <h2 style="margin:0 0 .3rem;color:#1e3a5f;">Ready to see real code?</h2>
-    <p style="color:#55688a;margin:0 0 1rem;">The blocks you used are written as words in real programs. Next you will change and write some yourself.</p>
+    <h2 style="margin:0 0 .3rem;color:#1e3a5f;">Next: warm up your fingers</h2>
+    <p style="color:#55688a;margin:0 0 1rem;">Real code uses symbols like &lt; &gt; { } and quotes. Practise typing them first, so nothing slows you down later.</p>
+    <a class="big-btn green" href="{{ url_for('start_keys') }}" style="text-decoration:none;"><i class="fas fa-keyboard"></i> Next: my keyboard and screen</a>
+  </div>
+  <p style="text-align:center;margin-top:1rem;"><a href="{{ url_for('start_keys') }}" style="color:#55688a;font-weight:700;">Skip the robot, practise my keyboard</a> &middot; <a href="{{ url_for('start_code') }}" style="color:#55688a;font-weight:700;">I can type, skip to real code</a></p>
+  {% endif %}
+  {% if mode == 'basics' %}
+  <div id="basicsCta" style="display:none;background:#fff;border:3px solid #6c4bb8;border-radius:24px;padding:1.4rem 1.6rem;margin-top:1rem;text-align:center;">
+    <h2 style="margin:0 0 .3rem;color:#1e3a5f;">Ready to write real code?</h2>
+    <p style="color:#55688a;margin:0 0 1rem;">You can now type every symbol you need. Next you will change, fix and write real code.</p>
     <a class="big-btn green" href="{{ url_for('start_code') }}" style="text-decoration:none;"><i class="fas fa-code"></i> Next: my first real code</a>
   </div>
-  <p style="text-align:center;margin-top:1rem;"><a href="{{ url_for('start_code') }}" style="color:#55688a;font-weight:700;">Already know a little code? Skip to real code</a></p>
   {% endif %}
   {% if mode == 'intro' %}
   <div id="introCta" style="display:none;background:#fff;border:3px solid #6c4bb8;border-radius:24px;padding:1.4rem 1.6rem;margin-top:1rem;text-align:center;">
@@ -46,10 +53,11 @@ function post(url, body) {
 NexaMission.mount(document.getElementById('missionRoot'), missionData, {
   lessonId: mode + '-' + (extra.track || missionData.skill || 'x') + '-' + Date.now(),
   accent: {{ accent | tojson }},
-  level: mode === 'capstone' ? 6 : ((mode === 'intro' || mode === 'precode') ? 1 : 3),           // capstone and practice use the faded (hint-after-trying) setting
+  level: mode === 'capstone' ? 6 : ((mode === 'intro' || mode === 'precode' || mode === 'basics') ? 1 : 3),           // capstone and practice use the faded (hint-after-trying) setting
   onStep: function (d) { post('/api/mission/step', {lesson_id: null, step: d.index, skill: d.skill, checks: d.checks, hints: d.hints, assisted: d.assisted, stuck: d.stuck}); },
   onComplete: function (detail) {
     if (mode === 'precode') { document.getElementById('precodeCta').style.display = 'block'; post('/api/learning/done', {kind:'precode'}); }
+    if (mode === 'basics') { document.getElementById('basicsCta').style.display = 'block'; post('/api/learning/done', {kind:'basics'}); }
     if (mode === 'intro') { document.getElementById('introCta').style.display = 'block'; post('/api/learning/done', {kind:'intro'}); }
     if (mode === 'warmup') post('/api/learning/done', {kind:'warmup', track: extra.track, order: extra.order});
     if (mode === 'capstone') post('/api/learning/done', {kind:'capstone', track: extra.track});

@@ -425,3 +425,8 @@ official name, tell me and I'll make it consistent everywhere.
 - Checked all 178 option clicks across every built-in quiz in a real browser: each pick reaches the server as the right option number. Built-in quizzes are sound.
 - Quizzes made by the admin AI generator or typed into the admin form can have a bad key (out of range, 1-based, a letter, two defensible answers). Added `quiz_problems()`: the admin form now refuses bad quizzes, startup logs a warning for any bad quiz already in the database, and the AI generator checks every question blind and drops ones it cannot agree with.
 - New test: tests/test_quiz_data.py.
+
+## Round: "Your keyboard and screen" (before any code)
+- New optional page `/start/keys` (`lesson_missions.BASICS`, 6 steps): files and browsers, Shift and capitals, `< > /`, `{ } : ;`, quotes and round brackets, copy/paste/undo, each checked by running what the kid types.
+- Flow is now robot (`/start`) → keyboard (`/start/keys`) → first real code (`/start/code`). Each step can be skipped. Completion is logged as `basics_done`.
+- Browser test: 6 steps, 0 failures.

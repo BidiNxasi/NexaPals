@@ -8,5 +8,6 @@ for sk in lm.PRACTICE: out['practice:' + sk] = lm.practice_mission(sk)
 for t, m in lm.CAPSTONES.items(): out['capstone:' + t] = m
 out['intro'] = lm.INTRO
 out['precode'] = lm.PRECODE
+out['basics'] = lm.BASICS
 json.dump(out, open(sys.argv[1], 'w'))
 print(len(out), 'missions')

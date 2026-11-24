@@ -978,6 +978,68 @@ CAPSTONES["javascript"]["steps"].insert(0, anatomy("Three new tools you will nee
     part('list.innerHTML = "";', "Empty a list", "<code>innerHTML</code> is everything inside an element. Setting it to empty text clears it out.", R_)]))
 
 # Skills that capstones belong to (shown on the skills page)
+# ───────────────── "Your keyboard and screen": before any code ─────────────────
+BASICS = {
+    "title": "Your keyboard and screen",
+    "success_msg": "Now you can type every symbol code needs, and you know how to copy and paste. You are ready.",
+    "skill": "intro",
+    "words": [
+        ["Browser", "The app you use to see web pages, like Chrome or Safari."],
+        ["File", "Something saved on a computer, like a photo or a page. Its name ends with a dot and a few letters, like <code>.html</code>, that say what kind it is."],
+        ["Shift key", "Hold it down while you tap another key to get a capital letter, or the symbol printed on the top of the key."],
+        ["Symbol", "A mark that is not a letter or number, like &lt; &gt; { } ( ) \" ; :"],
+        ["Copy and paste", "Copy makes a duplicate in a hidden clipboard. Paste puts the duplicate where your cursor is."],
+        ["Undo", "Takes back your last change. Press Ctrl and Z together (Cmd and Z on a Mac)."],
+    ],
+    "worked": {
+        "title": "Everything you type shows up on screen",
+        "explain": "Click the box below and type anything. The words appear underneath as you press each key. Code is just typing, but with some special symbols. In this short lesson you will practise finding them. If you are on a phone or tablet, a row of symbol buttons sits under the code box.",
+        "html": "<input id=\"i\" placeholder=\"Click here and type\" style=\"padding:.5rem;font-size:1rem\"><p id=\"o\" style=\"font-size:1.3rem;font-weight:700\"></p>",
+        "js": "document.getElementById(\"i\").addEventListener(\"input\", function () {\n  document.getElementById(\"o\").textContent = this.value;\n});",
+    },
+    "steps": [
+        anatomy("<strong>Files and browsers.</strong> A web page is saved in a <em>file</em>, and a <em>browser</em> opens it. Tap each coloured part of this file name.",
+                [part("my-page", "The name", "You choose this. Use small letters and dashes, no spaces.", "#7fe0b0"),
+                 part(".html", "The type", "After the dot comes the file type. <code>.html</code> tells the computer: this is a web page. A browser knows how to open it.", "#FFB347")],
+                "A name, a dot, and a type. Every file works like this."),
+        {"type": "code", "skill": "intro",
+         "prompt": "<strong>Capital letters.</strong> Click the box and type the word <code>Hello</code>. For the capital H, hold the <strong>Shift</strong> key and tap h, then let go and type ello.",
+         "starter_html": "",
+         "tests": [T("w", "The page says Hello (capital H)", "text", selector="body", regex="\\bHello\\b")],
+         "hints": ["Hold Shift, tap h, let go. Then e, l, l, o.", "On a phone, tap the arrow-up key for a capital."],
+         "solution": {"html": "Hello"},
+         "success_msg": "Shift gives capitals, and it also reaches the symbols printed on the top of keys."},
+        {"type": "code", "skill": "intro",
+         "prompt": "<strong>Angle brackets.</strong> The symbols &lt; and &gt; are on the same keys as the comma and the full stop. Hold <strong>Shift</strong> to get them. Make the word bold by typing <code>&lt;b&gt;</code> before it and <code>&lt;/b&gt;</code> after it. The slash <code>/</code> is next to the right Shift key.",
+         "starter_html": "Hello",
+         "tests": [T("b", "Hello is inside a <b> tag", "text", selector="b", regex="^\\s*Hello\\s*$")],
+         "hints": ["Type &lt;b&gt; at the start: Shift and comma, the letter b, Shift and full stop.", "At the end type &lt;/b&gt;."],
+         "solution": {"html": "<b>Hello</b>"},
+         "success_msg": "Those angle brackets are what HTML tags are made of. You will use them all the time."},
+        {"type": "code", "skill": "intro",
+         "prompt": "<strong>Curly brackets, colon and semicolon.</strong> Curly brackets <code>{ }</code> are Shift with the square-bracket keys, next to the P. The colon <code>:</code> is Shift with the semicolon key. Type exactly: <code>p { color: red; }</code>",
+         "starter_html": "<p>Hi there</p>", "starter_css": "",
+         "tests": [T("c", "The paragraph is red", "style", selector="p", prop="color", equals="rgb(255, 0, 0)")],
+         "hints": ["Letter p, a space, then { by holding Shift and tapping the [ key.", "Then color, a colon, a space, red, a semicolon, a space, and }."],
+         "solution": {"css": "p { color: red; }"},
+         "success_msg": "That is a CSS rule. You typed brackets, a colon and a semicolon correctly."},
+        {"type": "code", "skill": "intro",
+         "prompt": "<strong>Quotes and round brackets.</strong> The double quote <code>\"</code> is Shift with the key next to Enter. Round brackets <code>( )</code> are Shift with 9 and 0. Type exactly: <code>alert(\"Hi\");</code>",
+         "starter_js": "",
+         "tests": [T("a", "A message box pops up saying Hi", "alert", contains="Hi"), T("e", "No errors", "no_errors")],
+         "hints": ["alert, then (, then a quote, Hi, a quote, then ) and a semicolon.", "Every opening ( and quote needs a closing one."],
+         "solution": {"js": "alert(\"Hi\");"},
+         "success_msg": "Quotes and brackets always come in pairs. Now you can type almost every symbol in code."},
+        {"type": "code", "skill": "intro",
+         "prompt": "<strong>Copy and paste.</strong> Do not retype what you already have. Select the <code>&lt;li&gt;Pizza&lt;/li&gt;</code> line, copy it (<strong>Ctrl+C</strong>, or Cmd+C on a Mac), then paste it twice (<strong>Ctrl+V</strong>) so the list has 3 items. On a phone, press and hold the text, then tap Copy or Paste. Made a mess? <strong>Ctrl+Z</strong> undoes it.",
+         "starter_html": "<ul>\n  <li>Pizza</li>\n</ul>",
+         "tests": [T("l", "The list has at least 3 items", "count", selector="ul li", min=3)],
+         "hints": ["Triple-click the Pizza line to select it, then Ctrl+C.", "Click on a new empty line and press Ctrl+V. Do it again."],
+         "solution": {"html": "<ul>\n  <li>Pizza</li>\n  <li>Pizza</li>\n  <li>Pizza</li>\n</ul>"},
+         "success_msg": "Copy, paste and undo will save you hours. Programmers use them constantly."},
+    ],
+}
+
 SKILL_LABELS.update({"intro": "Getting started", "capstone-html": "HTML capstone", "capstone-css": "CSS capstone", "capstone-javascript": "JavaScript capstone"})
 
 

@@ -1599,6 +1599,8 @@ def learning_done():
                    meta={'track': str(d.get('track', ''))[:20], 'order': int(d.get('order', 0) or 0)})
     elif kind == 'precode':
         _log_event('precode_done', user_id=current_user.id)
+    elif kind == 'basics':
+        _log_event('basics_done', user_id=current_user.id)
     elif kind == 'intro':
         _log_event('intro_done', user_id=current_user.id)
     elif kind == 'capstone' and d.get('track') in lm.CAPSTONES:
@@ -1618,6 +1620,12 @@ def start_here():
     """Public "Before you code" experience for kids who know nothing yet: tap-only robot levels, no typing."""
     return _mission_page(lm.PRECODE, 'New to coding? Start here',
                          'No typing and no experience needed. You will tell a robot what to do, and that is real programming.', 'precode', '#6c4bb8')
+
+@app.route('/start/keys')
+def start_keys():
+    """Optional step between the robot and real code: symbols, shift, copy and paste, files and browsers."""
+    return _mission_page(lm.BASICS, 'Your keyboard and screen',
+                         'Before you write code, practise the keys it needs. Six short steps. Phone and tablet users have a symbol bar.', 'basics', '#6c4bb8')
 
 @app.route('/start/code')
 def start_code():
